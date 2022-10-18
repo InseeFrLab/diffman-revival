@@ -1,7 +1,7 @@
 
 #' Cleans the initial dataset by removing rows that are not in the correct format and removes duplicated lines
 #'
-#' @param input_df The tabulation table (data.frame or data.table). Each row
+#' @param input_df The tabulation table (data.table). Each row
 #' corresponds to the number of statistical unitsin a cross defined by a modality of the z1 nomenclature and a modality of the z2 nomenclature
 #'
 #' @return the cleaned tabulation table 
@@ -38,9 +38,10 @@ clean_init_df <- function(input_df){
 
 
 build_link_table <- function(input_df){
-  # donnees_rp <- readRDS("../data_rp.rds")
+  # donnees_rp <- readRDS("data/data_rp.rds")
   # df <- setDT(donnees_rp)
-  # input_df <- df[substr(z1,1,2) == "22"]
+  # input_df <- df[substr(z1,1,2) == "40"]
+  # input_df <- toy_example_1
   
   df <- copy(input_df)
   df <- clean_init_df(df)
@@ -59,6 +60,7 @@ build_link_table <- function(input_df){
     nomatch = 0,
     suffix = c("_from","_to")
   ) 
+  
   
   colnames(link_table)[colnames(link_table)=="z1_from"] <- "from"
   colnames(link_table)[colnames(link_table)=="z1_to"] <- "to"
@@ -146,8 +148,8 @@ build_m_crois <- function(link_table){
                     ),
                     by = .(from,to)
   ]
-  
-  ltable <-long_table(df)
+
+  ltable <- long_table(df)
   
   ltable$z1  <- as.factor(ltable$z1)
   ltable$z2  <- as.factor(ltable$z2)
@@ -415,3 +417,49 @@ draw_situation <- function(situation_table,z2_to_nb_obs,geom_z1,geom_z2,list_z1_
   
   m
 }
+
+#' create the equivalent individual data.frame from a tabulate z1 x z2 data.frame with integer (round in any case)
+#'
+#' @param input_df The tabulation table (data.frame or data.table). Each row
+#' corresponds to the number of statistical units in a cross defined by a modality of the z1 nomenclature and a modality of the z2 nomenclature
+#'
+#' @return the fictive individual table from the tabulation table 
+#'
+#' @examples 
+#' tab_table <- data.table(
+#'   z1 =c("A","A","B","D"),
+#'   z2 = c("a","b","b","a"),
+#'   nb_obs = c(2,5,6,0)
+#'   )
+#'
+#' create_fictive_ind_table(tab_table)
+
+create_fictive_ind_table <- function(tab_table){
+  
+  l <- split(tab_table,with(tab_table,paste0(z1,"_",z2)))
+  tmp <- lapply(
+    1:nrow(tab_table),
+    function(i){
+      # i <- 1
+      crossing <- tab_table[i,]
+      if (crossing$nb_obs == 0) return(NULL)
+      
+      with(
+        crossing,
+        data.table(
+          z1 = rep(z1,nb_obs),
+          z2 = rep(z2,nb_obs),
+          stringsAsFactors = FALSE
+        )
+      )
+    }
+  )
+  
+  out <- do.call(rbind,tmp)
+  
+  out$id <- seq(1,nrow(out))
+  
+  out[,c("id","z1","z2")]
+}
+
+
