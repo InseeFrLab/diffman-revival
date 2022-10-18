@@ -186,10 +186,17 @@ find_pbm_diff_tab <- function(
     verbose = TRUE,
     threshold = 11
 ){
+  # test sur grosses composante si ça bugg pas splitter le taf par composantes
+  # donnees_rp <- readRDS("data/data_rp.rds")
+  # df <- setDT(donnees_rp)
+  # link_table <- build_link_table(df)
+  # ltable <- unique(long_table(link_table))
+  # ltable[,.(n_com = length(unique(z1))),by=.(id_comp)][rev(order(n_com)),]
+  # link_table <- link_table[id_comp == "88",]
   
   
   # link_table <- build_link_table(toy_example_4)
-  # threshold = 7; max_agregate_size = 15;save_file = NULL; simplify = TRUE; verbose = TRUE
+  # threshold = 11; max_agregate_size = 15;save_file = NULL; simplify = TRUE; verbose = TRUE
   
   m_crois <- build_m_crois(link_table)
   
