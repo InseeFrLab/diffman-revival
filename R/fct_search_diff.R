@@ -256,6 +256,8 @@ find_id_obs_risque <- function(list_agregat, t_ind, threshold, verbose = TRUE){
 #' @export
 find_pbm_diff <- function(t_ind, threshold, max_agregate_size, save_file = NULL, simplify = TRUE, verbose = TRUE){
   
+  # t_ind <- create_fictive_ind_table(toy_example_4)
+  # threshold = 11; max_agregate_size = 15; save_file = NULL; simplify = TRUE; verbose = TRUE
   #define variables to avoid NOTE of "no visible binding for global
   # variable" when running R CMD check
   z1 = z2 = NULL
@@ -273,7 +275,7 @@ find_pbm_diff <- function(t_ind, threshold, max_agregate_size, save_file = NULL,
   t_crois <- simplify_z2_fus(t_crois)
   m_crois <- matrix_crois(t_crois)
   
-
+  
   #if(to_save) saveRDS(m_crois, paste0("Resultats_diffman/m_crois_",save_file,".RDS"))
   
   if(simplify){ #one can choose to skip these steps of graph reduction if desired

@@ -138,27 +138,19 @@ long_table <- function(link_table){
 
 build_m_crois <- function(link_table){
   
-  df <- link_table[ ,
-                    .(
-                      nb_obs_from = sum(nb_obs_from),
-                      nb_obs_to = sum(nb_obs_to),
-                      id_comp = unique(id_comp),
-                      z2 = paste0(z2,collapse = "-"),
-                      n_z2 = unique(n_z2)
-                    ),
-                    by = .(from,to)
-  ]
-
-  ltable <- long_table(df)
+  ltable <- unique(long_table(link_table))
+  
+  #z2_b est une "étiquette" qui donne les zones de z1 recouvertes par une union de zone de z2
+  df <- ltable[ , z2_b := paste0(sort(z1),collapse="-"),by =.(z2)][ ,.(nb=sum(nb_obs)),by=.(z1,z2_b)]
   
   ltable$z1  <- as.factor(ltable$z1)
-  ltable$z2  <- as.factor(ltable$z2)
+  ltable$z2  <- as.factor(ltable$z2_b)
   
   m_crois <- Matrix::sparseMatrix(
     i=as.numeric(ltable$z1),
     j=as.numeric(ltable$z2),
     x=ltable$nb_obs,
-    dimnames=list(levels(ltable$z1),levels(ltable$z2))
+    dimnames=list(levels(ltable$z1),levels(ltable$z2_b))
   )
   
   m_crois 
@@ -196,7 +188,7 @@ find_pbm_diff_tab <- function(
 ){
   
   
-  # link_table <- build_link_table(toy_example_2)
+  # link_table <- build_link_table(toy_example_4)
   # threshold = 7; max_agregate_size = 15;save_file = NULL; simplify = TRUE; verbose = TRUE
   
   m_crois <- build_m_crois(link_table)
