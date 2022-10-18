@@ -319,3 +319,70 @@ find_pbm_diff <- function(t_ind, threshold, max_agregate_size, save_file = NULL,
   
   return(obs_risque)
 }
+
+
+find_pbm_diff_tab <- function(t_ind, threshold, max_agregate_size, save_file = NULL, simplify = TRUE, verbose = TRUE){
+  
+  #define variables to avoid NOTE of "no visible binding for global
+  # variable" when running R CMD check
+  z1 = z2 = NULL
+  
+  if(verbose) message("******** Start of the process *********")
+  
+  to_save <- !is.null(save_file) #si save_file est renseignee, cela permet de sauvegarder les matrices croisees apres agregations
+  
+  t_ind <- as.data.table(t_ind) #conversion to data.table format
+  
+  if(verbose) message("< --- Creation of the crossing matrix --- >")
+  t_ind <- simplify_z2_rem(t_ind)
+  t_crois <- tab_crois(t_ind)
+  t_crois <- t_crois[z1 != "blanchi" & z2 != "blanchi"]
+  t_crois <- simplify_z2_fus(t_crois)
+  m_crois <- matrix_crois(t_crois)
+  
+  
+  #if(to_save) saveRDS(m_crois, paste0("Resultats_diffman/m_crois_",save_file,".RDS"))
+  
+  if(simplify){ #one can choose to skip these steps of graph reduction if desired
+    
+    if(verbose) message("< --- Merging method 1 --- > ")
+    m_crois <- agregate(m_crois, threshold, methode = "m1", verbose = verbose)
+    
+    #if(to_save) saveRDS(m_crois, paste0("Resultats_diffman/m_crois_ag_m1_",save_file,".RDS"))
+    
+    if(verbose) message("< --- Merging methods 1 and 2 --- >")
+    m_crois <- agregate(m_crois, threshold, methode = "both", verbose = verbose)
+    
+    #if(to_save) saveRDS(m_crois, paste0("Resultats_diffman/m_crois_ag_m2_",save_file,".RDS"))
+    
+    if(sum(dim(m_crois)==0)>0) {
+      message("No differentiation problems detected !")
+      return(NULL)
+    }
+    
+    if(verbose) message("< --- Splitting the graph --- >")
+    l_decomp <- decompose_m_crois(m_crois, max_agregate_size)
+  }
+  else{
+    l_decomp <- comp_connexe_list(m_crois)
+  }
+  
+  if(verbose) message("< --- Exhaustive search of differentiation problems --- >")
+  l_ag <- search_diff_agregate(l_decomp, threshold, max_agregate_size)
+  l_ag <- desagregate_list(l_ag)
+  
+  if(verbose) message("< --- Identification of risky observations --- >")
+  obs_risque <- find_id_obs_risque(l_ag, t_ind, threshold)
+  if(to_save) {
+    saveRDS(obs_risque, paste0(save_file,".RDS"))
+  }
+  
+  if(verbose) message("******** End of the process :) *********")
+  
+  message("There are ", 
+          nrow(obs_risque), 
+          " risky observations because of differentiation ",
+          "when confidentiality threshold is set to ", threshold)
+  
+  return(obs_risque)
+}

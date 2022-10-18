@@ -19,7 +19,8 @@ License: GPL (>= 2)
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.0.2
-Suggests: testthat
+Suggests: 
+    testthat (>= 3.0.0)
 Imports: tidyverse, igraph, progress, Rcpp, sf, dplyr, Matrix,
         data.table
 LinkingTo: Rcpp
@@ -32,3 +33,4 @@ Author: Vianney Costemalle [aut, cre],
 Depends: R (>= 3.5.0)
 Repository: CRAN
 Date/Publication: 2020-02-28 16:10:09 UTC
+Config/testthat/edition: 3

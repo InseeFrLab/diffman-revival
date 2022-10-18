@@ -135,7 +135,7 @@ is_connected_m2 <- function(i, j, m_graph, v_arete, threshold){
   #entre i et j
   #______________________________________________
   g <- igraph::graph_from_adjacency_matrix(m_graph, mode = "directed", weighted = TRUE)
-  connected <- j %in% igraph::bfs(g, root = i,neimode = "out", unreachable = FALSE)$order
+  connected <- j %in% igraph::bfs(g, root = i,mode = "out", unreachable = FALSE)$order
   
   return(connected)
 }

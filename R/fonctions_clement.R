@@ -195,6 +195,8 @@ find_pbm_diff_tab <- function(
     threshold = 11
 ){
   
+  
+  # link_table <- build_link_table(toy_example_2)
   # threshold = 7; max_agregate_size = 15;save_file = NULL; simplify = TRUE; verbose = TRUE
   
   m_crois <- build_m_crois(link_table)
@@ -202,18 +204,18 @@ find_pbm_diff_tab <- function(
   if(simplify){ #one can choose to skip these steps of graph reduction if desired
     
     if(verbose) message("< --- Merging method 1 --- > ")
-    m_crois_1 <- diffman:::agregate(m_crois, threshold, methode = "m1", verbose = verbose)
+    m_crois_1 <- agregate(m_crois, threshold, methode = "m1", verbose = verbose)
     
     if(verbose) message("< --- Merging methods 1 and 2 --- >")
-    m_crois_2 <- diffman:::agregate(m_crois_1, threshold, methode = "both", verbose = verbose)
+    m_crois_2 <- agregate(m_crois_1, threshold, methode = "both", verbose = verbose)
     
-    if(sum(dim(m_crois)==0)>0) {
+    if(sum(dim(m_crois_2)==0)>0) {
       message("No differentiation problems detected !")
       return(NULL)
     }
     
     if(verbose) message("< --- Splitting the graph --- >") 
-    l_decomp <- diffman:::decompose_m_crois(m_crois_2, max_agregate_size)
+    l_decomp <- decompose_m_crois(m_crois_2, max_agregate_size)
     
     
     if(!is.null(save_intermediate_data_file)) {
@@ -229,34 +231,34 @@ find_pbm_diff_tab <- function(
     }
     
   }else{
-    l_decomp <- diffman:::comp_connexe_list(m_crois)
+    l_decomp <- comp_connexe_list(m_crois)
   }
 
   if(verbose) message("< --- Exhaustive search of differentiation problems --- >")
-  l_ag <- diffman:::search_diff_agregate(l_decomp, threshold, max_agregate_size) 
+  l_ag <- search_diff_agregate(l_decomp, threshold, max_agregate_size) 
   
   # Contains the list of z1-zones at risk
-  l_ag <- diffman:::desagregate_list(l_ag) 
+  l_ag <- desagregate_list(l_ag) 
   
   return(l_ag)
 }
 
 
 
-#' Return information on at-risk-of-differnciation z1 zones
-#' From a given list of elements of z1, outputs all the information allowing to evaluate if a differentiation problem exists on this zone
+#' Return information on at-risk-of-differenciation z1 zones
+#' From a given list of elements of z1, outputs all the information allowing to evaluate if a differentiation problem exists on this zone (no information if no differneciation issue)
 #'
 #' @param list_z1  vector containing the elements of z1 constituting the area to be evaluated
 #' @param link_table (data.table) containing the triplets z1-z2-z1 corresponding to a connection between 2 elements of z1 throug one element of z2 with metadata
 #' @param threshold (data.table) the frequency rule threshold  below which a zone is considered at risk
 #'
-#' @return A list with the following elements
+#' @return A data.table with the following columns
 #' \enumerate{
 #' \item $checked_area the area checked (z1 elements concatenated with "-")
-#' \item $internal_diff_table : the data.table containing intersection z1 x z2 at risk of internal differenciation
-#' \item $external_diff_table : the data.table containing intersection z1 x z2 at risk of external differenciation
-#' \item $internal_diff_issue : a boolean indicating whether the zone defined by list_z1 is subject to an internal differentiation risk
-#' \item $external_diff_issue : a boolean indicating whether the zone defined by list_z1 is subject to an external differentiation risk
+#' \item $z1 : the z1 elements in the z1xz2 intersections at risk
+#' \item $z2 : the z2 elements in the z1xz2 intersections at risk
+#' \item $nb_obs : the number of statistical units in the intersection z1xZ2
+#' \item $type_diff : a boolean indicating whether the zone defined by list_z1 is subject to an internal differentiation risk
 #' }
 #'
 #' @examples 
@@ -284,21 +286,22 @@ return_diff_info <- function(list_z1,link_table, threshold){
   if (sum(internal_diff_table$nb_obs) < threshold) internal_diff_issue <- TRUE
   if (sum(external_diff_table$nb_obs) < threshold) external_diff_issue <- TRUE
   
-  out <- list(
-    checked_area = paste0(list_z1,collapse = "-"),
-    internal_diff_table = internal_diff_table,
-    external_diff_table = external_diff_table,
-    internal_diff_issue = internal_diff_issue, 
-    external_diff_issue = external_diff_issue
-  )
+  out <- data.table()
   
-  return(out)
+  if(internal_diff_issue){
+    internal_diff_table$checked_area <- paste0(list_z1,collapse = "-")
+    internal_diff_table$type_diff <- "internal"
+    out <-rbind(out,internal_diff_table)
+  }
   
+  if(external_diff_issue){
+    external_diff_table$checked_area <- paste0(list_z1,collapse = "-")
+    external_diff_table$type_diff <- "external"
+    out <-rbind(out,external_diff_table)
+  }
+  
+  out
 }
-
-
-
-
 
 
 
@@ -461,5 +464,4 @@ create_fictive_ind_table <- function(tab_table){
   
   out[,c("id","z1","z2")]
 }
-
 
