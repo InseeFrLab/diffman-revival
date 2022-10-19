@@ -148,12 +148,12 @@ build_m_crois <- function(link_table){
   
   m_crois <- Matrix::sparseMatrix(
     i=as.numeric(ltable$z1),
-    j=as.numeric(ltable$z2),
+    j=as.numeric(ltable$z2_b),
     x=ltable$nb_obs,
     dimnames=list(levels(ltable$z1),levels(ltable$z2_b))
   )
   
-  m_crois 
+  m_crois
 }
 
 
