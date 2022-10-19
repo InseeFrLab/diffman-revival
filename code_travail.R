@@ -53,3 +53,12 @@ test_toy_example(toy_example_4)
 
 
 
+#### représenter 
+
+
+head(l_decomp)
+
+
+
+
+

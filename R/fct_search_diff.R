@@ -13,7 +13,7 @@
 #'
 #' @return On retourne une liste d'agregats.
 search_diff_agregate=function(list_m_crois, threshold, max_agregate_size = 20){
-  
+  # list_m_crois <- l_decomp
   a <- 1
   list_agregat <- list()
   
@@ -27,8 +27,9 @@ search_diff_agregate=function(list_m_crois, threshold, max_agregate_size = 20){
   
   
   for(i in 1:length(list_m_crois)){
+    # i <- 1
     m <- list_m_crois[[i]]
-    base <- as.matrix(m)
+    base <- as.matrix(m)  
     if(ncol(base) == 1) colnames(base) = "1carreau"
     
     #### Preparation des donnees ####

@@ -144,7 +144,7 @@ build_m_crois <- function(link_table){
   df <- ltable[ , z2_b := paste0(sort(z1),collapse="-"),by =.(z2)][ ,.(nb=sum(nb_obs)),by=.(z1,z2_b)]
   
   ltable$z1  <- as.factor(ltable$z1)
-  ltable$z2  <- as.factor(ltable$z2_b)
+  ltable$z2_b  <- as.factor(ltable$z2_b)
   
   m_crois <- Matrix::sparseMatrix(
     i=as.numeric(ltable$z1),
@@ -218,6 +218,7 @@ find_pbm_diff_tab <- function(
     
     
     if(!is.null(save_intermediate_data_file)) {
+      # save_1 save_intermediate_data_file = "res_grosse_composante"
       saveRDS(
         list(
           m_crois = m_crois,
@@ -225,7 +226,7 @@ find_pbm_diff_tab <- function(
           m_crois_agreg_2 = m_crois_2,
           list_splitted_m_crois = l_decomp
         ),
-        paste0("diffman_results/",save_file,".RDS")
+        paste0(save_intermediate_data_file,".RDS")
       )
     }
     
