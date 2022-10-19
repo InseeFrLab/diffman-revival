@@ -91,8 +91,8 @@ return_connected_components<-function(link_table){
   # Construction du graph
   # https://igraph.org/r/#docs  joli !
   
-  graph <- graph_from_data_frame(link_table,directed = FALSE)
-  clust <- clusters(graph)
+  graph <- igraph::graph_from_data_frame(link_table,directed = FALSE)
+  clust <- igraph::clusters(graph)
   nodes <- data.table(from = names(clust$membership), id_comp = clust$membership)
   
   # je regarde les clusters
@@ -136,15 +136,11 @@ long_table <- function(link_table){
 #' @examples 
 #' m_crois<- build_mcrois(link_table)
 
-build_m_crois <- function(link_table){
+build_m_crois <- function(dt){
   
-  ltable <- unique(long_table(link_table))
+  ltable <- copy(dt)
   
-  #z2_b est une "étiquette" qui donne les zones de z1 recouvertes par une union de zone de z2
-  df <- ltable[ , z2_b := paste0(sort(z1),collapse="-"),by =.(z2)][ ,.(nb=sum(nb_obs)),by=.(z1,z2_b)]
-  
-  ltable$z1  <- as.factor(ltable$z1)
-  ltable$z2_b  <- as.factor(ltable$z2_b)
+  ltable[, ":="(z1 = factor(z1), z2_b = factor(z2_b))]
   
   m_crois <- Matrix::sparseMatrix(
     i=as.numeric(ltable$z1),
@@ -158,9 +154,9 @@ build_m_crois <- function(link_table){
 
 
 #' Find at-risk-of-differenciation areas.
-#' Build the crossover matrix defined in build_m_crossover, and operates the graph reduction functions on it and then returns the z1-zones (union of elements of z1) at risk 
+#' Build the crossover matrix defined in build_m_crois, and operates the graph reduction functions on it and then returns the z1-zones (union of elements of z1) at risk 
 #'
-#' @param link_table (data.table) containing the triplets z1-z2-z1 corresponding to a connection between 2 elements of z1 throug one element of z2 with metadata
+#' @param input_df (data.table) containing the z2 x z2 crossing with counts, tabulation table
 #' @param max_agregate_size Integer indicating the maximal size of agregates
 #' which are tested exhaustively. If that number is too large (greater than 30), the
 #' computations may not end because of the combinations number that can become very large.
@@ -179,7 +175,7 @@ build_m_crois <- function(link_table){
 #' @return the list of  at-risk zones defined by unions of z1 elements  
 
 find_pbm_diff_tab <- function(
-    link_table,
+    input_df,
     max_agregate_size = 15,
     save_intermediate_data_file = NULL,
     simplify = TRUE,
@@ -194,11 +190,23 @@ find_pbm_diff_tab <- function(
   # ltable[,.(n_com = length(unique(z1))),by=.(id_comp)][rev(order(n_com)),]
   # link_table <- link_table[id_comp == "88",]
   
+  # donnees_rp <- readRDS("data/donnees_rp.rds")
+  # input_df <- setDT(donnees_rp)
   
   # link_table <- build_link_table(toy_example_4)
   # threshold = 11; max_agregate_size = 15;save_file = NULL; simplify = TRUE; verbose = TRUE
   
-  m_crois <- build_m_crois(link_table)
+  df <- copy(input_df)
+  df <- clean_init_df(df)
+  
+  ## z2 intersecting only one element of z1
+  df_z2 <- df[,.(nb_z1=length(z1)),by=.(z2)]
+  df_z2_mono_z1 <- df[z2 %in% df_z2[nb_z1==1]$z2]
+  df_z2_multi_z1 <- df[z2 %in% df_z2[nb_z1>1]$z2]
+  
+  ltable <- df_z2_multi_z1[ , z2_b := paste0(sort(z1),collapse="-"),by =.(z2)][ ,.(nb_obs=sum(nb_obs)),by=.(z1,z2_b)]
+  
+  m_crois <- build_m_crois(l_table)
   
   if(simplify){ #one can choose to skip these steps of graph reduction if desired
     
@@ -215,30 +223,30 @@ find_pbm_diff_tab <- function(
     
     if(verbose) message("< --- Splitting the graph --- >") 
     l_decomp <- decompose_m_crois(m_crois_2, max_agregate_size)
-    
-    
-    if(!is.null(save_intermediate_data_file)) {
-      # save_1 save_intermediate_data_file = "res_grosse_composante"
-      saveRDS(
-        list(
-          m_crois = m_crois,
-          m_crois_agreg_1 = m_crois_1,
-          m_crois_agreg_2 = m_crois_2,
-          list_splitted_m_crois = l_decomp
-        ),
-        paste0(save_intermediate_data_file,".RDS")
-      )
-    }
-    
+  
   }else{
     l_decomp <- comp_connexe_list(m_crois)
   }
-
+  
   if(verbose) message("< --- Exhaustive search of differentiation problems --- >")
   l_ag <- search_diff_agregate(l_decomp, threshold, max_agregate_size) 
   
   # Contains the list of z1-zones at risk
   l_ag <- desagregate_list(l_ag) 
+  
+  if(!is.null(save_intermediate_data_file)) {
+    # save_1 save_intermediate_data_file = "res_grosse_composante"
+    saveRDS(
+      list(
+        m_crois = m_crois,
+        m_crois_agreg_1 = m_crois_1,
+        m_crois_agreg_2 = m_crois_2,
+        list_splitted_m_crois = l_decomp,
+        list_area_at_risk = l_ag
+      ),
+      paste0(save_intermediate_data_file,".RDS")
+    )
+  }
   
   return(l_ag)
 }
