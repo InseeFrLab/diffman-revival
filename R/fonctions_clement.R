@@ -10,7 +10,7 @@
 #' cleaned_dt<- clean_init_dt(input_dt)
 
 clean_init_dt <- function(input_dt){
-  #input_df <- df
+  #input_dt <- dt
   dt <- copy(input_dt)
   dt <- dt[,.(nb_obs = sum(nb_obs)),by = .(z1,z2)] # agregates count on duplicated lines !
   
@@ -34,6 +34,7 @@ return_connected_components<-function(input_dt){
   
   #input_dt <- toy_example_3
   #input_dt <- toy_example_4
+  #input_dt <- data.table(data_rp)
   # Construction du graph
   # https://igraph.org/r/#docs  joli !
   dt <- copy(input_dt)
@@ -71,7 +72,7 @@ build_m_crois <- function(input_dt){
   m_crois <- Matrix::sparseMatrix(
     i=as.numeric(dt$z1),
     j=as.numeric(dt$z2),
-    x=ltable$nb_obs,
+    x=dt$nb_obs,
     dimnames=list(levels(dt$z1),levels(dt$z2))
   )
   m_crois
@@ -93,8 +94,8 @@ prepare_data <- function(input_dt){
   
   ## z2 intersecting only one element of z1
   dt_z2 <- dt[,.(nb_z1=length(z1)),by=.(z2)]
-  dt_z2_mono_z1 <- dt[z2 %in% df_z2[nb_z1==1]$z2]
-  dt_z2_multi_z1 <- dt[z2 %in% df_z2[nb_z1>1]$z2]
+  dt_z2_mono_z1 <- dt[z2 %in% dt_z2[nb_z1==1]$z2]
+  dt_z2_multi_z1 <- dt[z2 %in% dt_z2[nb_z1>1]$z2]
   
   out <- list(intersecting_z2 = dt_z2_multi_z1,fully_included_z2 = dt_z2_mono_z1)
   

@@ -1,4 +1,51 @@
+---
+title: "Diffman tutorial"
+author: "Clément G"
+date: "`r Sys.Date()`"
+output:
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: github
+    toc: true
+    toc_depth: 5
+---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r warning=FALSE,message=FALSE,echo = FALSE}
+paquets <- c("data.table","btb","remotes","sf","igraph","Matrix","leaflet","dplyr","prettydoc")
+# install.packages(paquets)
+p <- lapply(paquets, function(p) suppressPackageStartupMessages(library(p, character.only = TRUE)))
+# remotes::install_github("https://github.com/InseeFrLab/diffman-1")
+```
+## What can you do with diffman ?
+
+```{r}
+
+### Ce code sera amené à disparaitre, en fire une vignette ! ou bien un rmd !!!
+#### Test sur données réelles 
+data_rp <- data.table(readRDS("data/data_rp.rds"))
+compo <- return_connected_components(data_rp)
+
+compo[,.(nb_com = length(z1)),by ="id_comp"][rev(order(nb_com)),]
+
+```
+
+Find diff pbm
+
+```{r}
+res <- find_pbm_diff_tab(input_dt = data_rp)
+
+return_diff_info()
+
+```
+
+
+
+```{r}
+#### Tests diffman pas tab vs diffman tab
 test_toy_example <- function(toy_example){
   
   t_ind <- create_fictive_ind_table(toy_example)
@@ -60,5 +107,4 @@ head(l_decomp)
 
 
 
-
-
+```
