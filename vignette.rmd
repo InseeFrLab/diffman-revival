@@ -42,7 +42,20 @@ return_diff_info()
 
 ```
 
+Represent your problem  with given geom
+```{r}
 
+
+```
+## TO DO :
+- timer le taff sur composantes entiere ? sinon on boucle et parallelise sans verbose
+- sinon faire du comp par composante
+- analyse de sensibilité faire la fonction qui casse le graph (enleve les carreaux liants pourvoir) !!
+- faire une fonction de création de graph direct dans et l'utiliser dans return connected component
+- montrer les toy example en equivalent graphique et faire les jeux d'application dessus
+- test 
+- ckeck
+## toy example with associated picture
 
 ```{r}
 #### Tests diffman pas tab vs diffman tab
