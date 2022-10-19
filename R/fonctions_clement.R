@@ -7,125 +7,52 @@
 #' @return the cleaned tabulation table 
 #'
 #' @examples 
-#' cleaned_df<- clean_init_df(input_df)
+#' cleaned_dt<- clean_init_dt(input_dt)
 
-clean_init_df <- function(input_df){
+clean_init_dt <- function(input_dt){
   #input_df <- df
-  df <- copy(input_df)
-  df <- df[,.(nb_obs = sum(nb_obs)),by = .(z1,z2)] # agregates count on duplicated lines !
+  dt <- copy(input_dt)
+  dt <- dt[,.(nb_obs = sum(nb_obs)),by = .(z1,z2)] # agregates count on duplicated lines !
   
   ## Suppress lines int the wrong format
-  df <- df[z2 != "FR_unallocated"]
-  df <- df[nb_obs != 0]
+  dt <- dt[z2 != "FR_unallocated"]
+  dt <- dt[nb_obs != 0]
   
-  df
+  dt
 }
 
-
-#' Build the link table from the initial tabulation table (data.frame or data.table) where each row
-#' correspond to the number of statistical units in a cross defined by a modality of the z1 nomenclature and a modality of the z2 nomenclature. 
-#' One line of the unit table represents a connection, triplets composed of 2 elements of z1 and one element of z2 connecting. 
-#' The identifier of connected component in the graph of the elements of z2 is added as well as the number of observations contained 
-#' in the intersection between the zone of z2 connecting and the 2 elements of z1 connected by z2
+#' Return elements of z1 with associated cobnnected components id from a given z1 x z2 crossing data.table
 #'
-#' @param input_df The tabulation table (data.frame or data.table). Each row
-#' corresponds to the number of statistical unitsin a cross defined by a modality of the z1 nomenclature and a modality of the z2 nomenclature
+#' @param input_df (data.table) containing the z1xz2 crossing data with nb_obs
 #'
-#' @return the link_table containing the triplet and metadatas (data.table)
-#'
-#' @examples 
-#' link_table<- build_link_table(input_df)
-
-
-build_link_table <- function(input_df){
-  # donnees_rp <- readRDS("data/data_rp.rds")
-  # df <- setDT(donnees_rp)
-  # input_df <- df[substr(z1,1,2) == "40"]
-  # input_df <- toy_example_1
-  
-  df <- copy(input_df)
-  df <- clean_init_df(df)
-  
-  ## z2 intersecting only one element of z1
-  df_z2 <- df[,.(nb_z1=length(z1)),by=.(z2)]
-  df_z2_mono_z1 <- df[z2 %in% df_z2[nb_z1==1]$z2]
-  df_z2_multi_z1 <- df[z2 %in% df_z2[nb_z1>1]$z2]
-  
-  
-  link_table <- merge( 
-    df_z2_multi_z1,
-    df_z2_multi_z1,
-    by=c('z2'),
-    allow.cartesian = TRUE,
-    nomatch = 0,
-    suffix = c("_from","_to")
-  ) 
-  
-  
-  colnames(link_table)[colnames(link_table)=="z1_from"] <- "from"
-  colnames(link_table)[colnames(link_table)=="z1_to"] <- "to"
-  
-  link_table <- link_table[from != to]
-  
-  link_table$from_to_z2 <- apply(link_table[,c("from","to","z2")],1,function(x) paste0(sort(x),collapse= "-"))
-  link_table <- link_table[!duplicated(from_to_z2)][,c("from","to","z2","nb_obs_from","nb_obs_to")]
-  
-  link_table[,n_z2 := length(z2) ,by =.(from,to)]
-  
-  return_connected_components(link_table)
-}
-
-
-
-
-#' Return elements of z1 graph nodes with the associated connected components  
-#'
-#' @param link_table (data.table) containing the triplets z1-z2-z1 corresponding to a connection between 2 elements of z1 throug one element of z2
-#'
-#' @return the node_table, each a line corresponds to an element of z1 with the identifier of the connected component to which it belongs in the graph of elements of z1
+#' @return a data table where associating each z1 to the id of its connected component 
 #'
 #' @examples 
 #' link_table<- return_connected_components(link_table)
 
-return_connected_components<-function(link_table){
+return_connected_components<-function(input_dt){
+  
+  #input_dt <- toy_example_3
+  #input_dt <- toy_example_4
   # Construction du graph
   # https://igraph.org/r/#docs  joli !
+  dt <- copy(input_dt)
   
-  graph <- igraph::graph_from_data_frame(link_table,directed = FALSE)
+  l <- prepare_data(dt)
+  m_crois <- build_m_crois(l$intersecting_z2)
+  
+  adjacency_matrix <- m_crois%*%t(m_crois)
+  adjacency_matrix <- as(adjacency_matrix,"lsparseMatrix")
+  
+  graph <- igraph::graph_from_adjacency_matrix(adjacency_matrix)
   clust <- igraph::clusters(graph)
   nodes <- data.table(from = names(clust$membership), id_comp = clust$membership)
   
   # je regarde les clusters
-  out <- nodes[link_table, on = "from"]
+  colnames(nodes)<- c("z1","id_comp")
   
-  out
+  nodes
 }
-
-
-#' Transform the link table containing triplets z1-z2-z1 with metadata about connection into a long table where each line correspond to  a part of the connections z1-z2 and the number of statistical unitis inside the intersection of the corresponding z1 and z2    
-#'
-#' @param link_table (data.table) containing the triplets z1-z2-z1 corresponding to a connection between 2 elements of z1 throug one element of z2 
-#'
-#' @return the long table with the metadata, identifiying the actual connected components in the z1 graph
-#'
-#' @examples 
-#' ltable<- long_table(link_table)
-
-long_table <- function(link_table){
-  
-  tab_from <- link_table[,c("from","z2","nb_obs_from","id_comp")] 
-  colnames(tab_from) <- c("z1","z2","nb_obs","id_comp")
-  
-  tab_to <-  link_table[,c("to","z2","nb_obs_to","id_comp")] 
-  colnames(tab_to) <- c("z1","z2","nb_obs","id_comp")
-  
-  out <- rbind(tab_from,tab_to)
-  
-  return(out)
-  
-}
-
-
 
 #' Build the cross matrix 
 #'
@@ -136,19 +63,17 @@ long_table <- function(link_table){
 #' @examples 
 #' m_crois<- build_mcrois(link_table)
 
-build_m_crois <- function(dt){
+build_m_crois <- function(input_dt){
   # dt <- ltable
-  ltable <- copy(dt)
-  
-  ltable[, ":="(z1 = factor(z1), z2_b = factor(z2_b))]
+  dt <- copy(input_dt)
+  dt[, ":="(z1 = factor(z1), z2 = factor(z2))]
   
   m_crois <- Matrix::sparseMatrix(
-    i=as.numeric(ltable$z1),
-    j=as.numeric(ltable$z2_b),
+    i=as.numeric(dt$z1),
+    j=as.numeric(dt$z2),
     x=ltable$nb_obs,
-    dimnames=list(levels(ltable$z1),levels(ltable$z2_b))
+    dimnames=list(levels(dt$z1),levels(dt$z2))
   )
-  
   m_crois
 }
 
@@ -161,17 +86,17 @@ build_m_crois <- function(dt){
 #' 
 #' @return data.table containing only the z2 intersecting 2 z1
 
-prepare_data <- function(input_df){
+prepare_data <- function(input_dt){
   # input_df <- toy_example_3
-  df <- copy(input_df)
-  df <- clean_init_df(df)
+  dt <- copy(input_dt)
+  dt <- clean_init_dt(dt)
   
   ## z2 intersecting only one element of z1
-  df_z2 <- df[,.(nb_z1=length(z1)),by=.(z2)]
-  df_z2_mono_z1 <- df[z2 %in% df_z2[nb_z1==1]$z2]
-  df_z2_multi_z1 <- df[z2 %in% df_z2[nb_z1>1]$z2]
+  dt_z2 <- dt[,.(nb_z1=length(z1)),by=.(z2)]
+  dt_z2_mono_z1 <- dt[z2 %in% df_z2[nb_z1==1]$z2]
+  dt_z2_multi_z1 <- dt[z2 %in% df_z2[nb_z1>1]$z2]
   
-  out <- list(intersecting_z2 = df_z2_multi_z1,fully_included_z2 = df_z2_mono_z1)
+  out <- list(intersecting_z2 = dt_z2_multi_z1,fully_included_z2 = dt_z2_mono_z1)
   
   return(out)
 }
@@ -198,7 +123,7 @@ prepare_data <- function(input_df){
 #' @return the list of  at-risk zones defined by unions of z1 elements  
 
 find_pbm_diff_tab <- function(
-    input_df,
+    input_dt,
     max_agregate_size = 15,
     save_intermediate_data_file = NULL,
     simplify = TRUE,
@@ -219,10 +144,12 @@ find_pbm_diff_tab <- function(
   
   # input_df <- toy_example_4
   # threshold = 11; max_agregate_size = 15;save_file = NULL; simplify = TRUE; verbose = TRUE
-  
-  intersecting_z2 <- prepare_data(input_df)$intersecting_z2
+  dt <- copy(input_dt)
+  intersecting_z2 <- prepare_data(dt)$intersecting_z2
   
   intersecting_z2[ , z2_b := paste0(sort(z1),collapse="-"),by =.(z2)][ ,.(nb_obs=sum(nb_obs)),by=.(z1,z2_b)]
+  intersecting_z2[, z2:= z2_b]
+  
   m_crois <- build_m_crois(intersecting_z2)
   
   if(simplify){ #one can choose to skip these steps of graph reduction if desired
@@ -289,23 +216,23 @@ find_pbm_diff_tab <- function(
 #' @examples 
 #' ltable<- return_diff_info(c("A","B","C"),link_table,threshold)
 
-return_diff_info <- function(list_z1,input_df, threshold){
+return_diff_info <- function(list_z1,input_dt, threshold){
   # l_ag <- find_pbm_diff_tab(toy_example_3,15,threshold = 11,verbose = FALSE)
   # list_z1 <- l_ag[[1]]
-  l <- prepare_data(input_df)
-  
-  dataf <- l$intersecting_z2
+  dt <- copy(input_dt)
+  l <- prepare_data(dt)
+  dt <- l$intersecting_z2
   
   # all of the z2 elements partially or fully included in the area defined by list_z1, (and not fully included in one element of z1, only crossing z1, z2 elements are interesting here)
-  z2_target <- dataf[z1 %in% list_z1,]$z2 
+  z2_target <- dt[z1 %in% list_z1,]$z2 
   
   # z2 elements crossing the list_z1 area and other elements of z1 than those in list_z1 (frontiers of the area)
   # z2 at the frontier of the area
-  at_risk_crossing <- unique(dataf[z2 %in% z2_target &  ! z1 %in% list_z1,"z2"])
+  at_risk_crossing <- unique(dt[z2 %in% z2_target &  ! z1 %in% list_z1,"z2"])
   
   # build the internal_diff_table  (part of the intersection of at_risk_crossing inside the list_z1 area) 
   # and the external_diff_table  (part of the intersection of at_risk_crossing outside the list_z1 area) 
-  diff_table <- dataf[z2 %in% at_risk_crossing$z2 ]
+  diff_table <- dt[z2 %in% at_risk_crossing$z2 ]
   external_diff_table <-diff_table[ !z1 %in% list_z1]
   internal_diff_table <-diff_table[ z1 %in% list_z1]
   
@@ -391,26 +318,27 @@ draw_situation <- function(situation_table,geom_z1,geom_z2,list_z1_to_color = NU
   # 
   # list_z1_to_color <- NULL
   
-  #mc cp s3/cguillo/commune_franceentiere_2021.dbf data/commune_franceentiere_2021.dbf
-  #mc cp s3/cguillo/commune_franceentiere_2021.fix data/commune_franceentiere_2021.fix
-  #mc cp s3/cguillo/commune_franceentiere_2021.prj data/commune_franceentiere_2021.prj
-  #mc cp s3/cguillo/commune_franceentiere_2021.shp data/commune_franceentiere_2021.shp
-  #mc cp s3/cguillo/commune_franceentiere_2021.shx data/commune_franceentiere_2021.shx
-  #mc cp s3/cguillo/data_rp.rds data/data_rp.rds
+#mc cp s3/cguillo/commune_franceentiere_2021.dbf data/commune_franceentiere_2021.dbf
+#mc cp s3/cguillo/commune_franceentiere_2021.fix data/commune_franceentiere_2021.fix
+#mc cp s3/cguillo/commune_franceentiere_2021.prj data/commune_franceentiere_2021.prj
+#mc cp s3/cguillo/commune_franceentiere_2021.shp data/commune_franceentiere_2021.shp
+#mc cp s3/cguillo/commune_franceentiere_2021.shx data/commune_franceentiere_2021.shx
+#mc cp s3/cguillo/data_rp.rds data/data_rp.rds
   
   # communes <-st_read("data/commune_franceentiere_2021.shp")
+  # situation_table <- prepare_data(situation_table)$intersecting_z2
   # liste_carreau <- situation_table$z2
-# 
-#   polygone_carreau <-
-#     carreaux_to_polygon(data.frame(carreau = liste_carreau), var_carreau = "carreau") %>%
-#     st_transform(crs = 4326)
-#   geom_z1 <- communes %>%
-#     filter(code %in% unique(c(situation_table$z1))) %>%
-#     select(code) %>%
-#     rename(z1 = code)
-#   geom_z2 <- polygone_carreau %>%
-#     rename(z2 = carreau) %>%
-#     select(-x,-y)
+  # 
+  # polygone_carreau <-
+  #   carreaux_to_polygon(data.frame(carreau = liste_carreau), var_carreau = "carreau") %>%
+  #   st_transform(crs = 4326)
+  # geom_z1 <- communes %>%
+  #   filter(code %in% unique(c(situation_table$z1))) %>%
+  #   select(code) %>%
+  #   rename(z1 = code)
+  # geom_z2 <- polygone_carreau %>%
+  #   rename(z2 = carreau) %>%
+  #   select(-x,-y)
 
   
   l <- prepare_data(situation_table)
