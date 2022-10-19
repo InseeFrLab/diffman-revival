@@ -129,7 +129,7 @@ long_table <- function(link_table){
 
 #' Build the cross matrix 
 #'
-#' @param link_table (data.table) containing the triplets z1-z2-z1 corresponding to a connection between 2 elements of z1 throug one element of z2
+#' @param dt (data.table) containing the z1 x z2 crossing with out duplicated lines
 #'
 #' @return returns the crossover matrix (SparseMatrix), whose rows represent the elements of z1 and the columns the elements of z2 (possibly aggregated if they contribute to the same connection) and whose values are equal to the number of statistical units in the considered z1 x z2 crossover
 #'
@@ -137,7 +137,7 @@ long_table <- function(link_table){
 #' m_crois<- build_mcrois(link_table)
 
 build_m_crois <- function(dt){
-  
+  # dt <- ltable
   ltable <- copy(dt)
   
   ltable[, ":="(z1 = factor(z1), z2_b = factor(z2_b))]
@@ -152,6 +152,29 @@ build_m_crois <- function(dt){
   m_crois
 }
 
+
+
+
+#' Prepare data , cleaning input_df with z1xzé crossin and extract lines containing z2 whichh are not fully contained by one element of z1  
+#'
+#' @param input_df (data.table) containing the z2 x z2 crossing with counts, tabulation table
+#' 
+#' @return data.table containing only the z2 intersecting 2 z1
+
+prepare_data <- function(input_df){
+  # input_df <- toy_example_3
+  df <- copy(input_df)
+  df <- clean_init_df(df)
+  
+  ## z2 intersecting only one element of z1
+  df_z2 <- df[,.(nb_z1=length(z1)),by=.(z2)]
+  df_z2_mono_z1 <- df[z2 %in% df_z2[nb_z1==1]$z2]
+  df_z2_multi_z1 <- df[z2 %in% df_z2[nb_z1>1]$z2]
+  
+  out <- list(intersecting_z2 = df_z2_multi_z1,fully_included_z2 = df_z2_mono_z1)
+  
+  return(out)
+}
 
 #' Find at-risk-of-differenciation areas.
 #' Build the crossover matrix defined in build_m_crois, and operates the graph reduction functions on it and then returns the z1-zones (union of elements of z1) at risk 
@@ -183,30 +206,24 @@ find_pbm_diff_tab <- function(
     threshold = 11
 ){
   # test sur grosses composante si ça bugg pas splitter le taf par composantes
-  # donnees_rp <- readRDS("data/data_rp.rds")
-  # df <- setDT(donnees_rp)
+  
+  # input_df <- readRDS("data/data_rp.rds")
+  # df <- setDT(input_df)
   # link_table <- build_link_table(df)
   # ltable <- unique(long_table(link_table))
   # ltable[,.(n_com = length(unique(z1))),by=.(id_comp)][rev(order(n_com)),]
-  # link_table <- link_table[id_comp == "88",]
+  # list_z1 <- unique(ltable[id_comp == 88]$z1)
+  # data_rp <- readRDS("data/data_rp.rds")
+  # input_df <- setDT(data_rp)
+  # input_df <- input_df[input_df$z1 %in% list_z1]
   
-  # donnees_rp <- readRDS("data/donnees_rp.rds")
-  # input_df <- setDT(donnees_rp)
-  
-  # link_table <- build_link_table(toy_example_4)
+  # input_df <- toy_example_4
   # threshold = 11; max_agregate_size = 15;save_file = NULL; simplify = TRUE; verbose = TRUE
   
-  df <- copy(input_df)
-  df <- clean_init_df(df)
+  intersecting_z2 <- prepare_data(input_df)$intersecting_z2
   
-  ## z2 intersecting only one element of z1
-  df_z2 <- df[,.(nb_z1=length(z1)),by=.(z2)]
-  df_z2_mono_z1 <- df[z2 %in% df_z2[nb_z1==1]$z2]
-  df_z2_multi_z1 <- df[z2 %in% df_z2[nb_z1>1]$z2]
-  
-  ltable <- df_z2_multi_z1[ , z2_b := paste0(sort(z1),collapse="-"),by =.(z2)][ ,.(nb_obs=sum(nb_obs)),by=.(z1,z2_b)]
-  
-  m_crois <- build_m_crois(l_table)
+  intersecting_z2[ , z2_b := paste0(sort(z1),collapse="-"),by =.(z2)][ ,.(nb_obs=sum(nb_obs)),by=.(z1,z2_b)]
+  m_crois <- build_m_crois(intersecting_z2)
   
   if(simplify){ #one can choose to skip these steps of graph reduction if desired
     
@@ -272,14 +289,18 @@ find_pbm_diff_tab <- function(
 #' @examples 
 #' ltable<- return_diff_info(c("A","B","C"),link_table,threshold)
 
-return_diff_info <- function(list_z1,link_table, threshold){
+return_diff_info <- function(list_z1,input_df, threshold){
+  # l_ag <- find_pbm_diff_tab(toy_example_3,15,threshold = 11,verbose = FALSE)
+  # list_z1 <- l_ag[[1]]
+  l <- prepare_data(input_df)
   
-  dataf <- long_table(link_table) 
+  dataf <- l$intersecting_z2
   
   # all of the z2 elements partially or fully included in the area defined by list_z1, (and not fully included in one element of z1, only crossing z1, z2 elements are interesting here)
   z2_target <- dataf[z1 %in% list_z1,]$z2 
   
-  # z2 elements crossing the list_z1 area and other elements of z1
+  # z2 elements crossing the list_z1 area and other elements of z1 than those in list_z1 (frontiers of the area)
+  # z2 at the frontier of the area
   at_risk_crossing <- unique(dataf[z2 %in% z2_target &  ! z1 %in% list_z1,"z2"])
   
   # build the internal_diff_table  (part of the intersection of at_risk_crossing inside the list_z1 area) 
@@ -315,8 +336,7 @@ return_diff_info <- function(list_z1,link_table, threshold){
 
 #' output a leaflet interactive map from a \emph{situation}, subset of lines from the link table
 #'
-#' @param situation_table  a subset of the link_table build with the build_link_table_function
-#' @param z2_to_nb_obs data.table containing the number of statistical units inside each elements of z2
+#' @param situation_table  a subset of crossing z1 x z2 with nb_obs at the intersection
 #' @param geom_z1 the sf data.frame containing geometry of z1 elements referenced in the situation table 
 #' @param geom_z2 the sf data.frame containing geometry of z2 elements referenced in the situation table 
 #' @param list_z1_to_color list of z1 elements whichh polygon will be colored in the output interactive map
@@ -329,26 +349,74 @@ return_diff_info <- function(list_z1,link_table, threshold){
 #' @examples 
 #' ltable<- return_diff_info(c("A","B","C"),link_table,threshold)
 
-draw_situation <- function(situation_table,z2_to_nb_obs,geom_z1,geom_z2,list_z1_to_color = NULL ,threshold = 11,save_name = NULL){
+draw_situation <- function(situation_table,geom_z1,geom_z2,list_z1_to_color = NULL ,threshold = 11,save_name = NULL){
   
-  # z2_to_nb_obs <- long_table(link_table)[ ,.(nb_obs_z2 = sum(nb_obs)) ,by = .(z2)]
+  # input_df <- readRDS("data/data_rp.rds")
+  # df <- setDT(input_df)
+  # link_table <- build_link_table(df)
+  # ltable <- unique(long_table(link_table))
+  # ltable[,.(n_com = length(unique(z1))),by=.(id_comp)][rev(order(n_com)),]
+  # list_z1 <- unique(ltable[id_comp == 17]$z1)
+  # data_rp <- readRDS("data/data_rp.rds")
+  # input_df <- setDT(data_rp)
+  # situation_table <- input_df[input_df$z1 %in% list_z1]
+
+  # install.packages("btb")
+  # get_centroid_carreau <- function(data, var_carreau){
+  #   
+  #   taille_carreau <- readr::parse_number(stringr::str_extract(data[[var_carreau]][1], "RES[0-9]*m"))
+  #   centroides <- data %>% 
+  #     select(carreau = all_of(var_carreau)) %>%
+  #     mutate(
+  #       ll_coord_x = readr::parse_number(stringr::str_extract(carreau, "E[0-9]*$")),
+  #       ll_coord_y = readr::parse_number(stringr::str_extract(carreau, "N[0-9]*")),
+  #       centroid_x = ll_coord_x + taille_carreau/2,
+  #       centroid_y = ll_coord_y + taille_carreau/2,
+  #       crs = readr::parse_number(stringr::str_extract(carreau, "CRS[0-9]*"))
+  #     )
+  #   return(list(df = centroides, epsg=centroides$crs[1], taille=taille_carreau))
+  # }
+  # 
+  # carreaux_to_polygon <- function(data, var_carreau){
+  #   
+  #   require(btb)
+  #   
+  #   centroides_l <- get_centroid_carreau(data, var_carreau) 
+  #   
+  #   centroides_l$df %>% 
+  #     select(carreau, x=centroid_x, y=centroid_y) %>% 
+  #     btb::dfToGrid(sEPSG = centroides_l$epsg, iCellSize = centroides_l$taille)
+  #   
+  # }
+  # 
+  # list_z1_to_color <- NULL
   
-  # situation_table <- link_table[id_comp == 6] ;unique(c(situation_table$from,situation_table$to))
-  # list_z1_to_color <- c("01014")
+  #mc cp s3/cguillo/commune_franceentiere_2021.dbf data/commune_franceentiere_2021.dbf
+  #mc cp s3/cguillo/commune_franceentiere_2021.fix data/commune_franceentiere_2021.fix
+  #mc cp s3/cguillo/commune_franceentiere_2021.prj data/commune_franceentiere_2021.prj
+  #mc cp s3/cguillo/commune_franceentiere_2021.shp data/commune_franceentiere_2021.shp
+  #mc cp s3/cguillo/commune_franceentiere_2021.shx data/commune_franceentiere_2021.shx
+  #mc cp s3/cguillo/data_rp.rds data/data_rp.rds
+  
+  # communes <-st_read("data/commune_franceentiere_2021.shp")
   # liste_carreau <- situation_table$z2
-  # polygone_carreau <-
-  #   carreaux_to_polygon(data.frame(carreau = liste_carreau), var_carreau = "carreau") %>%
-  #   st_transform(crs = 4326)
-  # 
-  # geom_z1 <- communes %>%
-  #   filter(code %in% unique(c(situation_table$from,situation_table$to))) %>%
-  #   select(code) %>%
-  #   rename(z1 = code)
-  # 
-  # geom_z2 <- polygone_carreau %>%
-  #   rename(z2 = carreau) %>%
-  #   select(-x,-y)
+# 
+#   polygone_carreau <-
+#     carreaux_to_polygon(data.frame(carreau = liste_carreau), var_carreau = "carreau") %>%
+#     st_transform(crs = 4326)
+#   geom_z1 <- communes %>%
+#     filter(code %in% unique(c(situation_table$z1))) %>%
+#     select(code) %>%
+#     rename(z1 = code)
+#   geom_z2 <- polygone_carreau %>%
+#     rename(z2 = carreau) %>%
+#     select(-x,-y)
+
   
+  l <- prepare_data(situation_table)
+  situation_table <-l$intersecting_z2
+  
+  z2_to_nb_obs <- situation_table[,.(nb_obs_z2=sum(nb_obs)),by = z2]
   
   # build the z1 x z2 intersection geometry
   st_agr(geom_z1) = "constant"
@@ -359,9 +427,7 @@ draw_situation <- function(situation_table,z2_to_nb_obs,geom_z1,geom_z2,list_z1_
     geom_z2 %>% select(z2)
   )
   
-  tab_croisement<- long_table(situation_table)
-  
-  inter_carreau_commune <- merge(tab_croisement,inter_carreau_commune,by = c("z1","z2"))
+  inter_carreau_commune <- merge(situation_table,inter_carreau_commune,by = c("z1","z2"))
   
   geom_z2 <- merge(geom_z2,z2_to_nb_obs,by ="z2",nomatch = 0)
   
@@ -374,7 +440,6 @@ draw_situation <- function(situation_table,z2_to_nb_obs,geom_z1,geom_z2,list_z1_
     fillColor = "black",
     bringToFront = TRUE
   )
-  
   
   m <- 
     leaflet() %>% 
