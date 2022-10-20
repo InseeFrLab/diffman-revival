@@ -39,15 +39,19 @@ Here we will tests with id_comp 1232 !
 ```{r}
 list_z1_compo <- compo[id_comp == 1232]$z1
 input_dt <- data_rp[z1 %in% list_z1_compo]
+
 l_area_z1_at_risk <- find_pbm_diff_tab(input_dt = input_dt,threshold = 11 )
 length(l_area_z1_at_risk)
+
+head(l_area_z1_at_risk,8)
 ```
 
 299 union of elements of z1 at risk of differenciation here. let's look further one this risk area
 ```{r}
 #lapply(l_area_z1_at_risk,length)
-area_z1_at_risk <- l_area_z1_at_risk[[115]]
+area_z1_at_risk <- l_area_z1_at_risk[[14]]
 area_z1_at_risk
+
 
 ```
 
@@ -119,6 +123,9 @@ geom_z2 <- polygone_carreau %>%
  And then we can draw the situation on an interactive map
 ```{r}
 draw_situation(situation_table,geom_z1,geom_z2,list_z1_to_color = area_z1_at_risk,threshold = 11)
+
+toy_example_5 <- situation_table
+usethis::use_data(toy_example_5)
 ```
 
 Looking at the square at the intersection of the blue municapility and the orange one (those of the area at risk ) we recognize the square disoplaty by the return_diff_info function !
@@ -142,9 +149,6 @@ Time difference of 25.74686 mins, analysis of the results
 ```{r}
 # mc cp res 
 
-
-str(l_area_z1_at_risk,1)
-
 ```
 ## Tests diffman_tab on toy example
 
@@ -157,7 +161,7 @@ find_pbm_diff_tab(toy_example_4,verbose = FALSE)
 
 ```
 ## TO DO :
-- faire des statistiques de carreaux blanchis vs carreaux sous le seuil avec le scénario où on blanchit tious les carreaux au frontière (ou un seul ?) on casse le lien en faisant ça d'ailleurs réfléchir à ce que ça veut dire ?
+- faire des statistiques de carreaux blanchis vs carreaux sous le seuil avec le scénario où on blanchit tous les carreaux au frontière (ou un seul ?) on casse le lien en faisant ça d'ailleurs réfléchir à ce que ça veut dire ?
 - diffman ne passe pas sur l'ensemble des composantes ça crash, masi pas grave car ça passe sur la grosse seule donc pas besoin de pousser
 - Maintenant faire des analyses de temps sur la grosse composante puis faire un travail sur les graphs sur une plus petite composante notamment regarder les points d'éclatement du graph, regarder les communes influentes très connectées pour lesquels quelques carreaux blanchis permettrainet de limiter le blanchiment
 - timer le taff sur composantes entiere ? sinon on boucle et parallelise sans verbose

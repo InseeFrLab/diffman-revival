@@ -22,15 +22,15 @@ test_toy_example <- function(toy_example){
   
   if (! is.null(res_diff_ind)) res_diff_ind <- res_diff_ind[!duplicated(paste0(agregat_z1,type_diff)),] else res_diff_ind <- NULL
   
-  link_table <- build_link_table(toy_example)
+  
   
   res_diff_tab <- find_pbm_diff_tab(
-    link_table = link_table,
+    input_dt = toy_example,
     threshold = 11,
     max_agregate_size = 15
   )
   
-  res_diff_tab <- do.call(rbind,lapply(res_diff_tab,return_diff_info, link_table = link_table, threshold = 11))
+  res_diff_tab <- do.call(rbind,lapply(res_diff_tab,return_diff_info, input_dt = toy_example, threshold = 11))
   
   return(list(res_diff_ind = res_diff_ind, res_diff_tab = res_diff_tab))
 }
