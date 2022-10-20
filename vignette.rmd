@@ -59,14 +59,10 @@ diff_info
 Now we can represent the at risk area with the draw situation function
 First we have to create the geometry needed to represent the situation
 
+Some functions to prepare geometry (municipalities and grid geometries)
 ```{r}
-
-l <- prepare_data(input_dt)
-init_table <- l$intersecting_z2
-situation_table <- init_table[z1 %in% area_z1_at_risk]
-situation_table <- init_table[z2 %in% situation_table$z2]
-
 install.packages("btb")
+
 get_centroid_carreau <- function(data, var_carreau){
 
   taille_carreau <- readr::parse_number(stringr::str_extract(data[[var_carreau]][1], "RES[0-9]*m"))
@@ -96,6 +92,14 @@ carreaux_to_polygon <- function(data, var_carreau){
 
 communes <-st_read("data/commune_franceentiere_2021.shp")
 
+```  
+```{r}
+l <- prepare_data(input_dt)
+init_table <- l$intersecting_z2
+
+situation_table <- init_table[z1 %in% area_z1_at_risk]
+situation_table <- init_table[z2 %in% situation_table$z2]
+
 liste_carreau <- situation_table$z2
 
 polygone_carreau <-
@@ -110,20 +114,18 @@ geom_z1 <- communes %>%
 geom_z2 <- polygone_carreau %>%
   rename(z2 = carreau) %>%
   select(-x,-y)
-```  
- 
+```
+
  And then we can draw the situation on an interactive map
 ```{r}
 draw_situation(situation_table,geom_z1,geom_z2,list_z1_to_color = area_z1_at_risk,threshold = 11)
-
-
 ```
 
 Looking at the square at the intersection of the blue municapility and the orange one (those of the area at risk ) we recognize the square disoplaty by the return_diff_info function !
 ```{r}
 diff_info
 ```
-##Time calculation time on the biggest component
+## Time calculation time on the biggest component
 
 ```{r}
 compo[,.(nb_com = length(z1)),by ="id_comp"][rev(order(nb_com)),] %>% head()
@@ -131,13 +133,19 @@ list_z1_compo <- compo[id_comp == 1]$z1
 input_dt <- data_rp[z1 %in% list_z1_compo]
 
 s <- Sys.time()
-l_area_z1_at_risk <- find_pbm_diff_tab(input_dt = input_dt,threshold = 11 )
+l_area_z1_at_risk <- find_pbm_diff_tab(input_dt = input_dt,threshold = 11, save_intermediate_data_file ="res_grosse_compo" )
 e <- Sys.time()
 
 e-s
 ```
+Time difference of 25.74686 mins, analysis of the results
+```{r}
+# mc cp res 
 
 
+str(l_area_z1_at_risk,1)
+
+```
 ## Tests diffman_tab on toy example
 
 ```{r}
