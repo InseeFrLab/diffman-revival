@@ -15,7 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r warning=FALSE,message=FALSE,echo = FALSE}
-paquets <- c("data.table","btb","remotes","sf","igraph","Matrix","leaflet","dplyr","prettydoc")
+paquets <- c("data.table","btb","remotes","sf","igraph","Matrix","leaflet","dplyr","prettydoc","devtools","testthat")
 # install.packages(paquets)
 p <- lapply(paquets, function(p) suppressPackageStartupMessages(library(p, character.only = TRUE)))
 # remotes::install_github("https://github.com/InseeFrLab/diffman-1")
@@ -30,6 +30,7 @@ data_rp <- data.table(readRDS("data/data_rp.rds"))
 compo <- return_connected_components(data_rp)
 
 compo[,.(nb_com = length(z1)),by ="id_comp"][rev(order(nb_com)),]
+
 
 ```
 
@@ -146,18 +147,76 @@ e <- Sys.time()
 e-s
 ```
 Time difference of 25.74686 mins, analysis of the results
+
+### Analysis of the big component reduction
 ```{r}
-# mc cp res 
+# mc cp s3/cguillo/res_grosse_composante.RDS res_grosse_composante.RDS
+
+
+
 
 ```
-## Tests diffman_tab on toy example
 
+## developp a function( which perform the whole extraction process) 
 ```{r}
 
-find_pbm_diff_tab(toy_example_1,verbose = FALSE)
-find_pbm_diff_tab(toy_example_2,verbose = FALSE)
-find_pbm_diff_tab(toy_example_3,verbose = FALSE)
-find_pbm_diff_tab(toy_example_4,verbose = FALSE)
+one_component_risk_extraction <- function(input_dt){
+
+  # list_z1_compo <- compo[id_comp == 1232]$z1
+  # input_dt <- data_rp[z1 %in% list_z1_compo]
+  
+  list_area_z1_at_risk <- find_pbm_diff_tab(input_dt)
+  
+  l_diff_info <- lapply(list_area_z1_at_risk,function(list_z1) return_diff_info(list_z1,input_dt,11))
+  tot_diff_info <- Reduce(rbind,l_diff_info)
+  
+  tot_diff_info
+  
+}
+
+all_component_risk_extraction <- function(input_dt){
+  
+  # list_z1_compo <- compo[id_comp %in% c(1232,510,22),]$z1
+  # input_dt <- data_rp[z1 %in% list_z1_compo]
+  
+  # first build the related components id
+  z1_to_component <- return_connected_components(input_dt)
+  
+  # merge with input_dt
+  input_dt_wit_comp <- z1_to_component[input_dt,on ="z1"]
+  
+  # 
+  l_input_dt <- split(input_dt_wit_comp,input_dt_wit_comp$id_comp)
+  
+  # parellilise here  if  an option parametr say yes
+  l_risk_compo <- lapply(l_input_dt,one_component_risk_extraction)
+  
+  out <- Reduce(l_risk_compo,rbind)
+  
+  out
+}
+
+  
+## test
+
+list_z1_compo <- compo[id_comp %in% c(1232,510,22),]$z1
+input_dt <- data_rp[z1 %in% list_z1_compo]
+res <- all_component_risk_extraction(input_dt)
+```
+
+## Tests diffman_tab on toy example (put that in test files) (what do we want to check ?)
+```{r}
+res1 <- find_pbm_diff_tab(toy_example_1,verbose = FALSE)
+return_diff_info(list_z1 = res1[[1]] ,input_dt = toy_example_1,threshold = 11)
+
+res2 <- find_pbm_diff_tab(toy_example_2,verbose = FALSE)
+return_diff_info(list_z1 = res2[[1]] ,input_dt = toy_example_2,threshold = 11)
+
+res3 <- find_pbm_diff_tab(toy_example_3,verbose = FALSE)
+return_diff_info(list_z1 = res3[[1]] ,input_dt = toy_example_3,threshold = 11)
+
+res4 <- find_pbm_diff_tab(toy_example_4,verbose = FALSE)
+return_diff_info(list_z1 = res4[[1]] ,input_dt = toy_example_4,threshold = 11)
 
 ```
 ## TO DO :
@@ -173,3 +232,12 @@ find_pbm_diff_tab(toy_example_4,verbose = FALSE)
 - test 
 - ckeck
 - toy example with associated picture
+
+# à copier coller directement dans le terminal (en une fois ça marche pour récupérer les données)
+
+mc cp s3/cguillo/commune_franceentiere_2021.dbf data/commune_franceentiere_2021.dbf
+mc cp s3/cguillo/commune_franceentiere_2021.fix data/commune_franceentiere_2021.fix
+mc cp s3/cguillo/commune_franceentiere_2021.prj data/commune_franceentiere_2021.prj
+mc cp s3/cguillo/commune_franceentiere_2021.shp data/commune_franceentiere_2021.shp
+mc cp s3/cguillo/commune_franceentiere_2021.shx data/commune_franceentiere_2021.shx
+mc cp s3/cguillo/data_rp.rds data/data_rp.rds

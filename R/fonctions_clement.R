@@ -218,7 +218,7 @@ find_pbm_diff_tab <- function(
 #' ltable<- return_diff_info(c("A","B","C"),link_table,threshold)
 
 return_diff_info <- function(list_z1,input_dt, threshold){
-  # l_ag <- find_pbm_diff_tab(toy_example_3,15,threshold = 11,verbose = FALSE)
+  # l_ag <- find_pbm_diff_tab(toy_example_1,15,threshold = 11,verbose = FALSE)
   # list_z1 <- l_ag[[1]]
   dt <- copy(input_dt)
   l <- prepare_data(dt)
