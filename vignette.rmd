@@ -161,10 +161,10 @@ input_dt <- data_rp[z1 %in% compo[id_comp == 1]$z1]
 Sys.time()
 
 list_area_z1_at_risk <- find_pbm_diff_tab(input_dt,
-                                            verbose = FALSE,
+                                            verbose = TRUE,
                                             threshold = threshold,
-                                            max_agregate_size = max_agregate_size,
-                                            verbose = TRUE
+                                            max_agregate_size = max_agregate_size
+                                         
   )
 Sys.time()
 
@@ -175,11 +175,14 @@ l_diff_info <- pblapply(
 Sys.time()
 tot_diff_info <- Reduce(rbind,l_diff_info)
 
-Sys.tim()
+Sys.time()
   
 ```
+- beginning : "2022-10-21 18:27:57 UTC"
+- search diff : "2022-10-21 18:57:48 UTC" (8494 élément dans l_area at risk) (return diff_info trop lourde ?)
+- diff_info : ?? Ok j'ai alléger diff info en arretant de préparer la table pour chaque list _z1 je la prépare en amont.. moins lourd iça prendra 30 min
 
-## developp a function(which perform the whole extraction process) 
+## The whole risk extraction process with parallel workers ! 
 ```{r}
 ## test
 
@@ -202,6 +205,15 @@ e-s
 global_diff_info <- read_diff_info("diff_info")
 
 ```
+
+```{r}
+toy_example_7 <- data.table(
+  z1 = c("M1","M1","M2","M2","M3","M3","M4","M4","M5","M6"),
+  z2 = c("c1","c2","c1","c3","c2","c4","c3","c5","c4","c5"),
+  nb_obs = c(10,25,30,30,40,50,20,19.5,20.3,10.9)
+                            )
+```
+
 ## Petit laius sur la stratégie de blanchiment pour le RP
 
 diffman va en fait extraire des intesrsections carreaux X commlunes à risque. Mais blanchir systématiquement les carreeaux impliqués dans ces intersections n'apportera pas grand chose car la différenciation interne est toujours possible même si le carreau (ou les) chevauchant est blanchi (à méditer). En fait ce qu'il faut c'est s'assurer que l'attaquant ne puisse pas faire de différenciation du tout sur la zone extraite. Comme on ne touchera jamais aux totaux communaux il s'agit en fait de s'assurer que l'attaquant nbe soit pas en mesure de reconstruire le total des carreaux totalement inclus dans la commune  (dans le cas d'une différzenciation interner ou le total des carreaux totalement inclus ou partiellement (zone de carreaux recouvrante). Pour ce faire on veut plutôt blanchir des carreaux intérieurs à la commune. et il faut aussi s'assurer que  l'agregation ne soit pas retrouvable. C'est comme si on forcait des agregations blanchies dans griddy.. PAs simple..
@@ -222,7 +234,6 @@ return_diff_info(list_z1 = res4[[1]] ,input_dt = toy_example_4,threshold = 11)
 
 ```
 ## TO DO :
-
 - ajouter les requirements dans description (foreach doParallel)
 - vignette CI etc.. faire un point ave +Julien
 - AU 30 VS diffman regarder les notes une fois que c'est fait

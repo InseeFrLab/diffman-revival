@@ -217,13 +217,10 @@ find_pbm_diff_tab <- function(
 #' @examples 
 #' ltable<- return_diff_info(c("A","B","C"),link_table,threshold)
 
-return_diff_info <- function(list_z1,input_dt, threshold){
+return_diff_info <- function(list_z1,dt, threshold){
   # l_ag <- find_pbm_diff_tab(toy_example_1,15,threshold = 11,verbose = FALSE)
   # list_z1 <- l_ag[[1]]
-  dt <- copy(input_dt)
-  l <- prepare_data(dt)
-  dt <- l$intersecting_z2
-  
+
   # all of the z2 elements partially or fully included in the area defined by list_z1, (and not fully included in one element of z1, only crossing z1, z2 elements are interesting here)
   z2_target <- dt[z1 %in% list_z1,]$z2 
   
@@ -496,9 +493,13 @@ one_component_risk_extraction <- function(input_dt,
                                             max_agregate_size = max_agregate_size
   )
   
+  dt <- copy(input_dt)
+  l <- prepare_data(dt)
+  dt <- l$intersecting_z2
+  
   l_diff_info <- lapply(
     list_area_z1_at_risk,
-    function(list_z1) return_diff_info(list_z1,input_dt,11)
+    function(list_z1) return_diff_info(list_z1,dt,11)
   )
   
   tot_diff_info <- Reduce(rbind,l_diff_info)
