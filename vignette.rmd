@@ -69,7 +69,7 @@ Some functions to prepare geometry (municipalities and grid geometries)
 install.packages("btb")
 
 get_centroid_carreau <- function(data, var_carreau){
-
+  
   taille_carreau <- readr::parse_number(stringr::str_extract(data[[var_carreau]][1], "RES[0-9]*m"))
   centroides <- data %>%
     select(carreau = all_of(var_carreau)) %>%
@@ -84,15 +84,15 @@ get_centroid_carreau <- function(data, var_carreau){
 }
 
 carreaux_to_polygon <- function(data, var_carreau){
-
+  
   require(btb)
-
+  
   centroides_l <- get_centroid_carreau(data, var_carreau)
-
+  
   centroides_l$df %>%
     select(carreau, x=centroid_x, y=centroid_y) %>%
     btb::dfToGrid(sEPSG = centroides_l$epsg, iCellSize = centroides_l$taille)
-
+  
 }
 
 communes <-st_read("data/commune_franceentiere_2021.shp")
@@ -121,7 +121,7 @@ geom_z2 <- polygone_carreau %>%
   select(-x,-y)
 ```
 
- And then we can draw the situation on an interactive map
+And then we can draw the situation on an interactive map
 ```{r}
 draw_situation(situation_table,geom_z1,geom_z2,list_z1_to_color = area_z1_at_risk,threshold = 11)
 
@@ -160,21 +160,31 @@ Time difference of 25.74686 mins, analysis of the results
 ## developp a function( which perform the whole extraction process) 
 ```{r}
 
-one_component_risk_extraction <- function(input_dt){
-
+one_component_risk_extraction <- function(input_dt,
+                                          threshold,
+                                          max_agregate_size
+){
+  
   # list_z1_compo <- compo[id_comp == 1232]$z1
   # input_dt <- data_rp[z1 %in% list_z1_compo]
   
-  list_area_z1_at_risk <- find_pbm_diff_tab(input_dt)
+  list_area_z1_at_risk <- find_pbm_diff_tab(input_dt,
+                                            verbose = FALSE,
+                                            threshold = threshold,
+                                            max_agregate_size = max_agregate_size
+  )
   
-  l_diff_info <- lapply(list_area_z1_at_risk,function(list_z1) return_diff_info(list_z1,input_dt,11))
+  l_diff_info <- lapply(
+    list_area_z1_at_risk,
+    function(list_z1) return_diff_info(list_z1,input_dt,11)
+  )
+  
   tot_diff_info <- Reduce(rbind,l_diff_info)
   
   tot_diff_info
-  
 }
 
-all_component_risk_extraction <- function(input_dt){
+all_component_risk_extraction <- function(input_dt,threshold = 11, max_agregate_size = 15,save_dir = NULL){
   
   # list_z1_compo <- compo[id_comp %in% c(1232,510,22),]$z1
   # input_dt <- data_rp[z1 %in% list_z1_compo]
@@ -189,19 +199,41 @@ all_component_risk_extraction <- function(input_dt){
   l_input_dt <- split(input_dt_wit_comp,input_dt_wit_comp$id_comp)
   
   # parellilise here  if  an option parametr say yes
-  l_risk_compo <- lapply(l_input_dt,one_component_risk_extraction)
+  message(paste0(length(l_input_dt)), " components to handle")
+  l_risk_compo <- lapply(seq_along(l_input_dt),
+                           
+                          
+                           function(i){
+                             # i <- 1
+                             input_dt <- l_input_dt[[i]]
+                             id_compo <- names(l_input_dt[i])
+                             nz1 <- length(unique(input_dt$z1))
+                             message("work on component number ",i," with ", nz1," elements of z1")
+                             tot_diff_info <- one_component_risk_extraction(
+                               input_dt,threshold = threshold,
+                               max_agregate_size = max_agregate_size
+                             )
+                             if (!is.null(save_dir)){
+                               dir.create(save_dir,showWarnings = FALSE)
+                               saveRDS(
+                                 tot_diff_info,
+                                 file = paste0(save_dir,"/res_",id_compo,".RDS")
+                               )
+                             }
+                           }
+  )
   
   out <- Reduce(l_risk_compo,rbind)
   
   out
 }
 
-  
+
 ## test
 
 list_z1_compo <- compo[id_comp %in% c(1232,510,22),]$z1
 input_dt <- data_rp[z1 %in% list_z1_compo]
-res <- all_component_risk_extraction(input_dt)
+res <- all_component_risk_extraction(input_dt,threshold = 11, max_agregate_size = 15, save_dir = "diff_info")
 ```
 
 ## Tests diffman_tab on toy example (put that in test files) (what do we want to check ?)
