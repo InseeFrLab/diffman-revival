@@ -148,24 +148,59 @@ e-s
 ```
 Time difference of 25.74686 mins, analysis of the results
 
-### Analysis of the big component reduction
+### Analysis of the big component reduction 
+
+Here I will look on  the biggest component , try too cut it in part with influence mesure ?
+
 ```{r}
 # mc cp s3/cguillo/res_grosse_composante.RDS res_grosse_composante.RDS
 
+toy_example_6 <-
+  data.table(
+    z1 = c("M1","M1","M2","M2","M3","M3","M4","M5"),
+    z2 = c("c1","c2","c2","c3","c1","c3","c4","c4"),
+    nb_obs = c(17,15,8,2.9,20,17,14,3.5)
+  )
 
-
-
+usethis::use_data(toy_example_6)
 ```
 
-## developp a function( which perform the whole extraction process) 
+## developp a function(which perform the whole extraction process) 
 ```{r}
 ## test
 
-list_z1_compo <- compo[id_comp %in% c(1232,510,22),]$z1
-input_dt <- data_rp[z1 %in% list_z1_compo]
-res <- all_component_risk_extraction(input_dt,threshold = 11, max_agregate_size = 15, save_dir = "diff_info")
+# list_z1_compo <- compo[id_comp %in% seq(3:50),]$z1
+# input_dt <- data_rp[z1 %in% list_z1_compo]
+input_dt <- data_rp
 
+s <- Sys.time()
+all_component_risk_extraction(
+  input_dt,
+  threshold = 11,
+  max_agregate_size = 15,
+  save_dir = "diff_info",
+  numCores = 20
+  )
+e <- Sys.time()
 
+e-s
+
+global_diff_info <- read_diff_info("diff_info")
+
+# install.packages("foreach")
+# install.packages("doParallel")
+# library(foreach)
+# library(doParallel)
+
+x1 <- vapply( icount(5), function(i) {
+    return(i * 2)
+}, numeric(1) )
+
+# iterators with foreach
+x2 <- foreach(i = icount(5), .combine = c) %dopar% {
+    return(i * 2)
+}
+list(apply_way = x1, foreach_way = x2)
 ```
 ## Petit laius sur la stratégie de blanchiment pour le RP
 
@@ -187,9 +222,13 @@ return_diff_info(list_z1 = res4[[1]] ,input_dt = toy_example_4,threshold = 11)
 
 ```
 ## TO DO :
+- les fichiers portent le numéroi de la composantes et si je retournais les composantes utilisées à la fin
+- difference between ::, require et library ?
+- ajouter les requirements dans description
+- vignette CI etc.. faire un point ave +Julien
+- je pense abandonner le fait que la fonction retourne les diffi infos d'un coup (trop lourdingu avec 1900 componante, proposer une fonction de lecture des résultats -> + efficace, avec un Reduce)
+- AU 30 VS diffman regarder les notes une fois que c'est fait
 - faire des statistiques de carreaux blanchis vs carreaux sous le seuil avec le scénario où on blanchit tous les carreaux au frontière (ou un seul ?) on casse le lien en faisant ça d'ailleurs réfléchir à ce que ça veut dire ?
-- diffman ne passe pas sur l'ensemble des composantes ça crash, masi pas grave car ça passe sur la grosse seule donc pas besoin de pousser
-- Maintenant faire des analyses de temps sur la grosse composante puis faire un travail sur les graphs sur une plus petite composante notamment regarder les points d'éclatement du graph, regarder les communes influentes très connectées pour lesquels quelques carreaux blanchis permettrainet de limiter le blanchiment
 - timer le taff sur composantes entiere ? sinon on boucle et parallelise sans verbose
 - sinon faire du comp par composante
 - analyse de sensibilité faire la fonction qui casse le graph (enleve les carreaux liants pourvoir) !!

@@ -478,8 +478,9 @@ create_fictive_ind_table <- function(tab_table){
 #' @return a data.table containning the diff info for this componet (same format than the return diff info function)
 #'
 #' @examples 
-#' input_dt = TODO toy example 6
-#' one_component_risk_extraction(input_dt, 11, 15)
+#' input_dt <- toy_example_6
+#' compo <- return_connected_components(input_dt)
+#' one_component_risk_extraction(input_dt[z1 %in% compo[id_comp == 1]$z1], 11, 15)
 
 one_component_risk_extraction <- function(input_dt,
                                           threshold,
@@ -519,13 +520,14 @@ one_component_risk_extraction <- function(input_dt,
 #' @param threshold Strictly positive integer indicating the confidentiality
 #' threshold. Observations are considered at risk if one can deduce information
 #' on a agregate of n observations where n < threshold.
+#' @param numCores if not null, apply work on connected components with parallelization whith numCres Cores
 #' 
 #' @return a data.table containning the diff info for this componet (same format than the return diff info function)
 #'
 #' @examples 
 #' input_dt <- toy_example_6
-#' one_component_risk_extraction(input_dt, 11, 15)
-all_component_risk_extraction <- function(input_dt,threshold = 11, max_agregate_size = 15,save_dir = NULL){
+#' all_component_risk_extraction(input_dt, 11, 15,"diff_info")
+all_component_risk_extraction <- function(input_dt,threshold = 11, max_agregate_size = 15, save_dir,numCores = NULL){
   
   # list_z1_compo <- compo[id_comp %in% c(1232,510,22),]$z1
   # input_dt <- data_rp[z1 %in% list_z1_compo]
@@ -541,35 +543,64 @@ all_component_risk_extraction <- function(input_dt,threshold = 11, max_agregate_
   
   # parellilise here  if  an option parametr say yes
   message(paste0(length(l_input_dt)), " components to handle")
-  l_risk_compo <- lapply(seq_along(l_input_dt),
-                         function(i){
-                           # i <- 1
-                           input_dt <- l_input_dt[[i]]
-                           id_compo <- names(l_input_dt[i])
-                           nz1 <- length(unique(input_dt$z1))
-                           s <- Sys.time()
-                           message("work on component number ",i," with ", nz1," elements of z1 ",appendLF = FALSE)
-                           tot_diff_info <- one_component_risk_extraction(
-                             input_dt,threshold = threshold,
-                             max_agregate_size = max_agregate_size
-                           )
-                           e <- Sys.time()
-                           message(round(e-s)," seconds")
-                           if (!is.null(save_dir)){
-                             dir.create(save_dir,showWarnings = FALSE)
-                             saveRDS(
-                               tot_diff_info,
-                               file = paste0(save_dir,"/res_",id_compo,".RDS")
-                             )
-                           }
-                         }
-  )
   
-  out <- Reduce(rbind,l_risk_compo)
+  #numCores <- 3
+  doParallel::registerDoParallel(numCores)  # use multicore, set to the number of our cores
   
-  out
+  extract_info_and_save <- function(i){
+    # i <- 1
+    input_dt <- l_input_dt[[i]]
+    id_compo <- names(l_input_dt[i])
+    nz1 <- length(unique(input_dt$z1))
+    s <- Sys.time()
+    message("work on component number ",i," with ", nz1," elements of z1 ",appendLF = FALSE)
+    tot_diff_info <- one_component_risk_extraction(
+      input_dt,threshold = threshold,
+      max_agregate_size = max_agregate_size
+    )
+    e <- Sys.time()
+    message(round(e-s)," seconds")
+  
+    dir.create(save_dir,showWarnings = FALSE)
+    saveRDS(
+        tot_diff_info,
+        file = paste0(save_dir,"/res_",id_compo,".RDS")
+    )
+    
+    # tot_diff_info
+  }
+  
+  if(is.null(numCores)){
+  l_risk_compo <-lapply(seq_along(l_input_dt), function(i) extract_info_and_save(i))
+  }else{
+  l_risk_compo <- foreach::foreach(i = seq_along(l_input_dt)) %dopar% extract_info_and_save(i)
+  }
+  
+  return(z1_to_component)# in order to be able to link saved file name and z1 elements
 }
 
+
+#' Read diff_info info from files into a given directory and rbind them
+#' @param save_dir the directory where the diff_info files are included
+#' 
+#' @return a data.table containning all the diff info for all related components
+#'
+#' @examples 
+#' input_dt <- toy_example_6
+#' all_component_risk_extraction(input_dt, 11, 15,"diff_info")
+#' read_diff_info("diff_info")
+read_diff_info <- function(save_dir){
+  # save_dir <- "diff_info"
+  l_res<- paste0(save_dir,"/",list.files(save_dir))
+  
+  dt <- data.table()
+  for(file in l_res){
+    # avoid loading all the files at the same time
+    read_dt <- readRDS(file)
+    dt <- rbind(dt,read_dt)
+  }
+  dt 
+}
 
 
 
