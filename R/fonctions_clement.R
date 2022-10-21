@@ -469,6 +469,110 @@ create_fictive_ind_table <- function(tab_table){
 
 
 
+#' return the diff info from a input data table corresponding to one connected component of z1
+#' perform the search of diff issue and return the diff information fro the corresponding component 
+#' @param input_df The tabulation table (data.frame or data.table). Each row
+#' corresponds to the number of statistical units in a cross defined by a modality of the z1 nomenclature and a modality of the z2 nomenclature
+#' z1 has to belong to the same related component (regarding the graph construction)
+#' 
+#' @return a data.table containning the diff info for this componet (same format than the return diff info function)
+#'
+#' @examples 
+#' input_dt = TODO toy example 6
+#' one_component_risk_extraction(input_dt, 11, 15)
+
+one_component_risk_extraction <- function(input_dt,
+                                          threshold,
+                                          max_agregate_size
+){
+  
+  # list_z1_compo <- compo[id_comp == 1232]$z1
+  # input_dt <- data_rp[z1 %in% list_z1_compo]
+  
+  list_area_z1_at_risk <- find_pbm_diff_tab(input_dt,
+                                            verbose = FALSE,
+                                            threshold = threshold,
+                                            max_agregate_size = max_agregate_size
+  )
+  
+  l_diff_info <- lapply(
+    list_area_z1_at_risk,
+    function(list_z1) return_diff_info(list_z1,input_dt,11)
+  )
+  
+  tot_diff_info <- Reduce(rbind,l_diff_info)
+  
+  tot_diff_info
+}
+
+#' return the diff info from a input data table corresponding the whole graph which is a list of connected component of z1
+#' perform the search of diff issue and return the diff information for all the corresponding component 
+#' @param input_df The tabulation table (data.frame or data.table). Each row
+#' corresponds to the number of statistical units in a cross defined by a modality of the z1 nomenclature and a modality of the z2 nomenclature
+#' z1 has to belong to the same related component (regarding the graph construction)
+#' 
+#' @param max_agregate_size Integer indicating the maximal size of agregates
+#' which are tested exhaustively. If that number is too large (greater than 30), the
+#' computations may not end because of the combinations number that can become very large.
+#' Also the RAM can be overloaded.
+#' @param save_dir Character indicating the folder where ntermediate results willbe saved (useful if there is too much components)
+#' @param threshold Strictly positive integer indicating the confidentiality
+#' threshold. Observations are considered at risk if one can deduce information
+#' on a agregate of n observations where n < threshold.
+#' 
+#' @return a data.table containning the diff info for this componet (same format than the return diff info function)
+#'
+#' @examples 
+#' input_dt <- toy_example_6
+#' one_component_risk_extraction(input_dt, 11, 15)
+all_component_risk_extraction <- function(input_dt,threshold = 11, max_agregate_size = 15,save_dir = NULL){
+  
+  # list_z1_compo <- compo[id_comp %in% c(1232,510,22),]$z1
+  # input_dt <- data_rp[z1 %in% list_z1_compo]
+  
+  # first build the related components id
+  z1_to_component <- return_connected_components(input_dt)
+  
+  # merge with input_dt
+  input_dt_wit_comp <- z1_to_component[input_dt,on ="z1"]
+  
+  # 
+  l_input_dt <- split(input_dt_wit_comp,input_dt_wit_comp$id_comp)
+  
+  # parellilise here  if  an option parametr say yes
+  message(paste0(length(l_input_dt)), " components to handle")
+  l_risk_compo <- lapply(seq_along(l_input_dt),
+                         function(i){
+                           # i <- 1
+                           input_dt <- l_input_dt[[i]]
+                           id_compo <- names(l_input_dt[i])
+                           nz1 <- length(unique(input_dt$z1))
+                           s <- Sys.time()
+                           message("work on component number ",i," with ", nz1," elements of z1 ",appendLF = FALSE)
+                           tot_diff_info <- one_component_risk_extraction(
+                             input_dt,threshold = threshold,
+                             max_agregate_size = max_agregate_size
+                           )
+                           e <- Sys.time()
+                           message(round(e-s)," seconds")
+                           if (!is.null(save_dir)){
+                             dir.create(save_dir,showWarnings = FALSE)
+                             saveRDS(
+                               tot_diff_info,
+                               file = paste0(save_dir,"/res_",id_compo,".RDS")
+                             )
+                           }
+                         }
+  )
+  
+  out <- Reduce(rbind,l_risk_compo)
+  
+  out
+}
+
+
+
+
 
 ### Fonction pour comparer diffman pas tab et diffman tab, à effacer par la suite
 test_toy_example <- function(toy_example){

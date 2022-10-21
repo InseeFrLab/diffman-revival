@@ -159,82 +159,17 @@ Time difference of 25.74686 mins, analysis of the results
 
 ## developp a function( which perform the whole extraction process) 
 ```{r}
-
-one_component_risk_extraction <- function(input_dt,
-                                          threshold,
-                                          max_agregate_size
-){
-  
-  # list_z1_compo <- compo[id_comp == 1232]$z1
-  # input_dt <- data_rp[z1 %in% list_z1_compo]
-  
-  list_area_z1_at_risk <- find_pbm_diff_tab(input_dt,
-                                            verbose = FALSE,
-                                            threshold = threshold,
-                                            max_agregate_size = max_agregate_size
-  )
-  
-  l_diff_info <- lapply(
-    list_area_z1_at_risk,
-    function(list_z1) return_diff_info(list_z1,input_dt,11)
-  )
-  
-  tot_diff_info <- Reduce(rbind,l_diff_info)
-  
-  tot_diff_info
-}
-
-all_component_risk_extraction <- function(input_dt,threshold = 11, max_agregate_size = 15,save_dir = NULL){
-  
-  # list_z1_compo <- compo[id_comp %in% c(1232,510,22),]$z1
-  # input_dt <- data_rp[z1 %in% list_z1_compo]
-  
-  # first build the related components id
-  z1_to_component <- return_connected_components(input_dt)
-  
-  # merge with input_dt
-  input_dt_wit_comp <- z1_to_component[input_dt,on ="z1"]
-  
-  # 
-  l_input_dt <- split(input_dt_wit_comp,input_dt_wit_comp$id_comp)
-  
-  # parellilise here  if  an option parametr say yes
-  message(paste0(length(l_input_dt)), " components to handle")
-  l_risk_compo <- lapply(seq_along(l_input_dt),
-                           
-                          
-                           function(i){
-                             # i <- 1
-                             input_dt <- l_input_dt[[i]]
-                             id_compo <- names(l_input_dt[i])
-                             nz1 <- length(unique(input_dt$z1))
-                             message("work on component number ",i," with ", nz1," elements of z1")
-                             tot_diff_info <- one_component_risk_extraction(
-                               input_dt,threshold = threshold,
-                               max_agregate_size = max_agregate_size
-                             )
-                             if (!is.null(save_dir)){
-                               dir.create(save_dir,showWarnings = FALSE)
-                               saveRDS(
-                                 tot_diff_info,
-                                 file = paste0(save_dir,"/res_",id_compo,".RDS")
-                               )
-                             }
-                           }
-  )
-  
-  out <- Reduce(l_risk_compo,rbind)
-  
-  out
-}
-
-
 ## test
 
 list_z1_compo <- compo[id_comp %in% c(1232,510,22),]$z1
 input_dt <- data_rp[z1 %in% list_z1_compo]
 res <- all_component_risk_extraction(input_dt,threshold = 11, max_agregate_size = 15, save_dir = "diff_info")
+
+
 ```
+## Petit laius sur la stratégie de blanchiment pour le RP
+
+diffman va en fait extraire des intesrsections carreaux X commlunes à risque. Mais blanchir systématiquement les carreeaux impliqués dans ces intersections n'apportera pas grand chose car la différenciation interne est toujours possible même si le carreau (ou les) chevauchant est blanchi (à méditer). En fait ce qu'il faut c'est s'assurer que l'attaquant ne puisse pas faire de différenciation du tout sur la zone extraite. Comme on ne touchera jamais aux totaux communaux il s'agit en fait de s'assurer que l'attaquant nbe soit pas en mesure de reconstruire le total des carreaux totalement inclus dans la commune  (dans le cas d'une différzenciation interner ou le total des carreaux totalement inclus ou partiellement (zone de carreaux recouvrante). Pour ce faire on veut plutôt blanchir des carreaux intérieurs à la commune. et il faut aussi s'assurer que  l'agregation ne soit pas retrouvable. C'est comme si on forcait des agregations blanchies dans griddy.. PAs simple..
 
 ## Tests diffman_tab on toy example (put that in test files) (what do we want to check ?)
 ```{r}
