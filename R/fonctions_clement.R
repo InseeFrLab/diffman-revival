@@ -168,7 +168,7 @@ find_pbm_diff_tab <- function(
     
     if(verbose) message("< --- Splitting the graph --- >") 
     l_decomp <- decompose_m_crois(m_crois_2, max_agregate_size)
-  
+    
   }else{
     l_decomp <- comp_connexe_list(m_crois)
   }
@@ -220,7 +220,7 @@ find_pbm_diff_tab <- function(
 return_diff_info <- function(list_z1,dt, threshold){
   # l_ag <- find_pbm_diff_tab(toy_example_1,15,threshold = 11,verbose = FALSE)
   # list_z1 <- l_ag[[1]]
-
+  
   # all of the z2 elements partially or fully included in the area defined by list_z1, (and not fully included in one element of z1, only crossing z1, z2 elements are interesting here)
   z2_target <- dt[z1 %in% list_z1,]$z2 
   
@@ -285,7 +285,7 @@ draw_situation <- function(situation_table,geom_z1,geom_z2,list_z1_to_color = NU
   # data_rp <- readRDS("data/data_rp.rds")
   # input_df <- setDT(data_rp)
   # situation_table <- input_df[input_df$z1 %in% list_z1]
-
+  
   # install.packages("btb")
   # get_centroid_carreau <- function(data, var_carreau){
   #   
@@ -316,12 +316,12 @@ draw_situation <- function(situation_table,geom_z1,geom_z2,list_z1_to_color = NU
   # 
   # list_z1_to_color <- NULL
   
-#mc cp s3/cguillo/commune_franceentiere_2021.dbf data/commune_franceentiere_2021.dbf
-#mc cp s3/cguillo/commune_franceentiere_2021.fix data/commune_franceentiere_2021.fix
-#mc cp s3/cguillo/commune_franceentiere_2021.prj data/commune_franceentiere_2021.prj
-#mc cp s3/cguillo/commune_franceentiere_2021.shp data/commune_franceentiere_2021.shp
-#mc cp s3/cguillo/commune_franceentiere_2021.shx data/commune_franceentiere_2021.shx
-#mc cp s3/cguillo/data_rp.rds data/data_rp.rds
+  #mc cp s3/cguillo/commune_franceentiere_2021.dbf data/commune_franceentiere_2021.dbf
+  #mc cp s3/cguillo/commune_franceentiere_2021.fix data/commune_franceentiere_2021.fix
+  #mc cp s3/cguillo/commune_franceentiere_2021.prj data/commune_franceentiere_2021.prj
+  #mc cp s3/cguillo/commune_franceentiere_2021.shp data/commune_franceentiere_2021.shp
+  #mc cp s3/cguillo/commune_franceentiere_2021.shx data/commune_franceentiere_2021.shx
+  #mc cp s3/cguillo/data_rp.rds data/data_rp.rds
   
   # communes <-st_read("data/commune_franceentiere_2021.shp")
   # situation_table <- prepare_data(situation_table)$intersecting_z2
@@ -337,7 +337,7 @@ draw_situation <- function(situation_table,geom_z1,geom_z2,list_z1_to_color = NU
   # geom_z2 <- polygone_carreau %>%
   #   rename(z2 = carreau) %>%
   #   select(-x,-y)
-
+  
   
   l <- prepare_data(situation_table)
   situation_table <-l$intersecting_z2
@@ -547,7 +547,9 @@ all_component_risk_extraction <- function(input_dt,threshold = 11, max_agregate_
   
   #numCores <- 3
   doParallel::registerDoParallel(numCores)  # use multicore, set to the number of our cores
-  
+  doMC::registerDoMC()
+  options(cores=numCores)
+  #doMC::getDoParWorkers()
   extract_info_and_save <- function(i){
     # i <- 1
     input_dt <- l_input_dt[[i]]
@@ -561,20 +563,21 @@ all_component_risk_extraction <- function(input_dt,threshold = 11, max_agregate_
     )
     e <- Sys.time()
     message(round(e-s)," seconds")
-  
+    
     dir.create(save_dir,showWarnings = FALSE)
     saveRDS(
-        tot_diff_info,
-        file = paste0(save_dir,"/res_",id_compo,".RDS")
+      tot_diff_info,
+      file = paste0(save_dir,"/res_",id_compo,".RDS")
     )
     
     # tot_diff_info
   }
   
   if(is.null(numCores)){
-  l_risk_compo <-lapply(seq_along(l_input_dt), function(i) extract_info_and_save(i))
+    l_risk_compo <-lapply(seq_along(l_input_dt),extract_info_and_save)
   }else{
-  l_risk_compo <- foreach::foreach(i = seq_along(l_input_dt)) %dopar% extract_info_and_save(i)
+    cl <- makeCluster(getOption("cl.cores", numCores))
+    l_risk_compo <- parallel::clusterApplyLB(cl,seq_along(l_input_dt),extract_info_and_save)
   }
   
   return(z1_to_component)# in order to be able to link saved file name and z1 elements
