@@ -571,8 +571,9 @@ all_component_risk_extraction <- function(input_dt,threshold = 11, max_agregate_
   if(is.null(numCores)){
     l_risk_compo <-lapply(seq_along(l_input_dt),extract_info_and_save)
   }else{
-    cl <- parallel::makeCluster(getOption("cl.cores", numCores))
-    l_risk_compo <- parallel::clusterApplyLB(cl,seq_along(l_input_dt),extract_info_and_save)
+    cl <- parallel::makeCluster(numCores)
+    doParallel::registerDoParallel(cl)
+    l_risk_compo <- foreach(i = seq_along(l_input_dt)) %dopar% extract_info_and_save(i)
   }
   
   return(z1_to_component)# in order to be able to link saved file name and z1 elements

@@ -197,7 +197,7 @@ all_component_risk_extraction(
   threshold = 11,
   max_agregate_size = 15,
   save_dir = "diff_info",
-  numCores = 50
+  numCores = 5
   )
 e <- Sys.time()
 
