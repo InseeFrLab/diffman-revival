@@ -545,11 +545,6 @@ all_component_risk_extraction <- function(input_dt,threshold = 11, max_agregate_
   # parellilise here  if  an option parametr say yes
   message(paste0(length(l_input_dt)), " components to handle")
   
-  #numCores <- 3
-  doParallel::registerDoParallel(numCores)  # use multicore, set to the number of our cores
-  doMC::registerDoMC()
-  options(cores=numCores)
-  #doMC::getDoParWorkers()
   extract_info_and_save <- function(i){
     # i <- 1
     input_dt <- l_input_dt[[i]]
@@ -576,7 +571,7 @@ all_component_risk_extraction <- function(input_dt,threshold = 11, max_agregate_
   if(is.null(numCores)){
     l_risk_compo <-lapply(seq_along(l_input_dt),extract_info_and_save)
   }else{
-    cl <- makeCluster(getOption("cl.cores", numCores))
+    cl <- parallel::makeCluster(getOption("cl.cores", numCores))
     l_risk_compo <- parallel::clusterApplyLB(cl,seq_along(l_input_dt),extract_info_and_save)
   }
   

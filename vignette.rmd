@@ -188,6 +188,7 @@ Sys.time()
 
 # list_z1_compo <- compo[id_comp %in% seq(3:50),]$z1
 # input_dt <- data_rp[z1 %in% list_z1_compo]
+data_rp <- data.table(readRDS("data/data_rp.rds"))
 input_dt <- data_rp
 
 s <- Sys.time()
