@@ -28,7 +28,6 @@ p <- lapply(paquets, function(p) suppressPackageStartupMessages(library(p, chara
 #### Test sur données réelles 
 data_rp <- data.table(readRDS("data/data_rp.rds"))
 compo <- return_connected_components(data_rp)
-
 compo[,.(nb_com = length(z1)),by ="id_comp"][rev(order(nb_com)),]
 
 
@@ -148,56 +147,22 @@ e-s
 ```
 Time difference of 25.74686 mins, analysis of the results
 
-### Analysis of the big component reduction 
 
-Here I will look on  the biggest component , try too cut it in part with influence mesure ?
-
-```{r}
-# mc cp s3/cguillo/res_grosse_composante.RDS res_grosse_composante.RDS
-
-compo <- return_connected_components(data_rp)
-compo[ ,.(n_com = length(z1)), by = "id_comp"]
-input_dt <- data_rp[z1 %in% compo[id_comp == 1]$z1]
-Sys.time()
-
-list_area_z1_at_risk <- find_pbm_diff_tab(input_dt,
-                                            verbose = TRUE,
-                                            threshold = threshold,
-                                            max_agregate_size = max_agregate_size
-                                         
-  )
-Sys.time()
-
-l_diff_info <- pblapply(
-    list_area_z1_at_risk,
-    function(list_z1) return_diff_info(list_z1,input_dt,11)
-  )
-Sys.time()
-tot_diff_info <- Reduce(rbind,l_diff_info)
-
-Sys.time()
-  
-```
-- beginning : "2022-10-21 18:27:57 UTC"
-- search diff : "2022-10-21 18:57:48 UTC" (8494 élément dans l_area at risk) (return diff_info trop lourde ?)
-- diff_info : ?? Ok j'ai alléger diff info en arretant de préparer la table pour chaque list _z1 je la prépare en amont.. moins lourd iça prendra 30 min
-
-## The whole risk extraction process with parallel workers ! 
+## The whole risk extraction process 
 ```{r}
 ## test
 
 # list_z1_compo <- compo[id_comp %in% seq(3:50),]$z1
 # input_dt <- data_rp[z1 %in% list_z1_compo]
 data_rp <- data.table(readRDS("data/data_rp.rds"))
-input_dt <- data_rp[1:500,]
+input_dt <- data_rp
 
 s <- Sys.time()
 all_component_risk_extraction(
   input_dt,
   threshold = 11,
   max_agregate_size = 15,
-  save_dir = "diff_info",
-  numCores = 20
+  save_dir = "diff_info"
   )
 e <- Sys.time()
 
@@ -213,6 +178,16 @@ toy_example_7 <- data.table(
   z2 = c("c1","c2","c1","c3","c2","c4","c3","c5","c4","c5"),
   nb_obs = c(10,25,30,30,40,50,20,19.5,20.3,10.9)
                             )
+ # à méditer
+ # }else{
+ #    cl <- parallel::makeCluster(numCores)
+ #    parallel::clusterExport(cl,c("one_component_risk_extraction",
+ #                                 "find_pbm_diff_tab","agregate",
+ #                                 "build_m_crois","copy","clean_init_dt",
+ #                                 "prepare_data","agregate_one"))
+ #    doParallel::registerDoParallel(cl)
+ #    l_risk_compo <- foreach(i = seq_along(l_input_dt)) %dopar% extract_info_and_save(i)
+ #  }
 ```
 
 ## Petit laius sur la stratégie de blanchiment pour le RP
@@ -235,7 +210,14 @@ return_diff_info(list_z1 = res4[[1]] ,input_dt = toy_example_4,threshold = 11)
 
 ```
 ## TO DO :
-- ajouter les requirements dans description (foreach doParallel)
+-bmlanchir carreaux internes aux zones à risque en sortie de diff_info
+-rajouter les carreaux interne en option dans draw situation, internal z2 area param  = TRUE
+- commencer déjà par gérer en intra vérifier que dans chaque zone à risque il existe au moins un carreau totalement onclus blanchis et que la somme des carreaux blanchis faiaut au moins 11
+- faire un exemple jouet pour illustrer la stratégie de blanchiement . une commune à 100 habitants avec 95 en carreaux inclus et 5 dans un carreau intersectant la commune et une autre.
+- puis enfin penser à la remontée et comment gérer ça.
+- pour griddy il faut pas gérer les carreaux blanchis par diffman en voulant les protéger mais juste s'en servir et ne pas chercher d'autres cases à blanchir si il en existe déjà une, c'est une sorte de statut non sensible des cases.
+- ajouter les requirements dans description -> devtools:: check !!
+-batterie de test !
 - vignette CI etc.. faire un point ave +Julien
 - AU 30 VS diffman regarder les notes une fois que c'est fait
 - faire des statistiques de carreaux blanchis vs carreaux sous le seuil avec le scénario où on blanchit tous les carreaux au frontière (ou un seul ?) on casse le lien en faisant ça d'ailleurs réfléchir à ce que ça veut dire ?

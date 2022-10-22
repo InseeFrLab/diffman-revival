@@ -486,9 +486,11 @@ one_component_risk_extraction <- function(input_dt,
   
   # list_z1_compo <- compo[id_comp == 1232]$z1
   # input_dt <- data_rp[z1 %in% list_z1_compo]
+  verbose  = FALSE
+  if(length(unique(input_dt$z1 > 1000))) verbose = TRUE
   
   list_area_z1_at_risk <- find_pbm_diff_tab(input_dt,
-                                            verbose = FALSE,
+                                            verbose = verbose,
                                             threshold = threshold,
                                             max_agregate_size = max_agregate_size
   )
@@ -528,9 +530,9 @@ one_component_risk_extraction <- function(input_dt,
 #' @examples 
 #' input_dt <- toy_example_6
 #' all_component_risk_extraction(input_dt, 11, 15,"diff_info")
-all_component_risk_extraction <- function(input_dt,threshold = 11, max_agregate_size = 15, save_dir,numCores = NULL){
-  
-  # list_z1_compo <- compo[id_comp %in% c(1232,510,22),]$z1
+all_component_risk_extraction <- function(input_dt,threshold = 11, max_agregate_size = 15, save_dir){
+
+  # list_z1_compo <- compo[id_comp %in% c(22),]$z1
   # input_dt <- data_rp[z1 %in% list_z1_compo]
   
   # first build the related components id
@@ -556,6 +558,9 @@ all_component_risk_extraction <- function(input_dt,threshold = 11, max_agregate_
       input_dt,threshold = threshold,
       max_agregate_size = max_agregate_size
     )
+    
+    tot_diff_info$id_comp <- id_compo
+    
     e <- Sys.time()
     message(round(e-s)," seconds")
     
@@ -567,18 +572,8 @@ all_component_risk_extraction <- function(input_dt,threshold = 11, max_agregate_
     
     # tot_diff_info
   }
-  
-  if(is.null(numCores)){
-    l_risk_compo <-lapply(seq_along(l_input_dt),extract_info_and_save)
-  }else{
-    cl <- parallel::makeCluster(numCores)
-    parallel::clusterExport(cl,c("one_component_risk_extraction",
-                                 "find_pbm_diff_tab","agregate",
-                                 "build_m_crois","copy","clean_init_dt",
-                                 "prepare_data","agregate_one"))
-    doParallel::registerDoParallel(cl)
-    l_risk_compo <- foreach(i = seq_along(l_input_dt)) %dopar% extract_info_and_save(i)
-  }
+
+  l_risk_compo <-lapply(seq_along(l_input_dt),extract_info_and_save)
   
   return(z1_to_component)# in order to be able to link saved file name and z1 elements
 }

@@ -19,12 +19,12 @@
 #'
 #' @return En sortie, on a la matrice de croisement avec une ligne en moins,
 #' et potentiellement des colonnes en moins egalement.
-fusion <- function(i, j, m_crois, col_to_suppress){
+fusion <- function(i, j, m_crois, col_to_suppress,verbose = FALSE){
   #on modifie le nom de la ligne i:
   rownames(m_crois)[i] <- paste0(c(rownames(m_crois)[i], rownames(m_crois)[j]), collapse = ".")
   
   
-  if(length(col_to_suppress) %in% c(ncol(m_crois), ncol(m_crois) - 1)) {
+  if(length(col_to_suppress) %in% c(ncol(m_crois), ncol(m_crois) - 1) & verbose) {
     print("Everything is merged")
   }
   
