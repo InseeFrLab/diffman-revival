@@ -189,7 +189,7 @@ Sys.time()
 # list_z1_compo <- compo[id_comp %in% seq(3:50),]$z1
 # input_dt <- data_rp[z1 %in% list_z1_compo]
 data_rp <- data.table(readRDS("data/data_rp.rds"))
-input_dt <- data_rp
+input_dt <- data_rp[1:500,]
 
 s <- Sys.time()
 all_component_risk_extraction(
@@ -197,14 +197,13 @@ all_component_risk_extraction(
   threshold = 11,
   max_agregate_size = 15,
   save_dir = "diff_info",
-  numCores = 5
+  numCores = 20
   )
 e <- Sys.time()
 
 e-s
 
 global_diff_info <- read_diff_info("diff_info")
-
 
 ```
 

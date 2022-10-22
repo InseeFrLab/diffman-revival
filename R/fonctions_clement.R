@@ -572,6 +572,10 @@ all_component_risk_extraction <- function(input_dt,threshold = 11, max_agregate_
     l_risk_compo <-lapply(seq_along(l_input_dt),extract_info_and_save)
   }else{
     cl <- parallel::makeCluster(numCores)
+    parallel::clusterExport(cl,c("one_component_risk_extraction",
+                                 "find_pbm_diff_tab","agregate",
+                                 "build_m_crois","copy","clean_init_dt",
+                                 "prepare_data","agregate_one"))
     doParallel::registerDoParallel(cl)
     l_risk_compo <- foreach(i = seq_along(l_input_dt)) %dopar% extract_info_and_save(i)
   }
