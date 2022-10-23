@@ -97,6 +97,7 @@ carreaux_to_polygon <- function(data, var_carreau){
 communes <-st_read("data/commune_franceentiere_2021.shp")
 
 ```  
+
 ```{r}
 l <- prepare_data(input_dt)
 init_table <- l$intersecting_z2

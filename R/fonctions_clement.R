@@ -591,12 +591,12 @@ all_component_risk_extraction <- function(input_dt,threshold = 11, max_agregate_
 read_diff_info <- function(save_dir){
   # save_dir <- "diff_info"
   l_res<- paste0(save_dir,"/",list.files(save_dir))
-  
   dt <- data.table()
   for(file in l_res){
+    # print(file)
     # avoid loading all the files at the same time
     read_dt <- readRDS(file)
-    dt <- rbind(dt,read_dt)
+    dt <- data.table::rbindlist(list(dt,read_dt),fill = TRUE)
   }
   dt 
 }
