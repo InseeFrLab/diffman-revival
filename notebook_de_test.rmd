@@ -208,25 +208,33 @@ return_diff_info(list_z1 = res3[[1]] ,input_dt = toy_example_3,threshold = 11)
 res4 <- find_pbm_diff_tab(toy_example_4,verbose = FALSE)
 return_diff_info(list_z1 = res4[[1]] ,input_dt = toy_example_4,threshold = 11)
 
+toy_example_8 <- data.table(
+  z1 =c(rep("M1",9),"M2"),
+  z2 = c(paste0("c",seq(1:9)),"c9"),
+  nb_obs = c(5,10,20,6,13,20,10,11,5,100)
+)
+
+usethis::use_data(toy_example_8)
 ```
+
 ## TO DO :
--bmlanchir carreaux internes aux zones à risque en sortie de diff_info
--rajouter les carreaux interne en option dans draw situation, internal z2 area param  = TRUE
-- commencer déjà par gérer en intra vérifier que dans chaque zone à risque il existe au moins un carreau totalement onclus blanchis et que la somme des carreaux blanchis faiaut au moins 11
-- faire un exemple jouet pour illustrer la stratégie de blanchiement . une commune à 100 habitants avec 95 en carreaux inclus et 5 dans un carreau intersectant la commune et une autre.
+
+- finalement on va proposer dans le package une stratégie de protection pourdiffman hors gridy (ie hors multi level) et on verra ce qsu'on fait pour griddy
+- Algo de protection post diffman, function qui prend en entrée la table diff_info globale  et l'input_dt qui traite compo par compo 
+  i) Version Bête : je choisis des carreaux interne  < 11 ménages si ily en a assez sum( carreaux blanchis >11 alors c'est bon )
+  ii) je cherche des carreaux influents (déduits de l'influence de la commune dans le graph) et les blanchis comme ça je suissûr qu'ils seront déjà utiles pour une autre zone-> découper le taf par composante ?
+- parallelisation moins rigide que foreach ?
+- blanchir carreaux internes aux zones à risque en sortie de diff_info
+- rajouter les carreaux interne en option dans draw situation, internal z2 area param  = TRUE
+- commencer déjà par gérer en intra vérifier que dans chaque zone à risque il existe au moins un carreau totalement inclus blanchis et que la somme des carreaux blanchis faiaut au moins 11
 - puis enfin penser à la remontée et comment gérer ça.
 - pour griddy il faut pas gérer les carreaux blanchis par diffman en voulant les protéger mais juste s'en servir et ne pas chercher d'autres cases à blanchir si il en existe déjà une, c'est une sorte de statut non sensible des cases.
-- ajouter les requirements dans description -> devtools:: check !!
--batterie de test !
+- batterie de tests !
 - vignette CI etc.. faire un point ave +Julien
 - AU 30 VS diffman regarder les notes une fois que c'est fait
 - faire des statistiques de carreaux blanchis vs carreaux sous le seuil avec le scénario où on blanchit tous les carreaux au frontière (ou un seul ?) on casse le lien en faisant ça d'ailleurs réfléchir à ce que ça veut dire ?
-- timer le taff sur composantes entiere ? sinon on boucle et parallelise sans verbose
-- sinon faire du comp par composante
-- analyse de sensibilité faire la fonction qui casse le graph (enleve les carreaux liants pourvoir) !!
-- maîtriser la visibilité des fonctions exportabilités
-- test 
-- check
+
+
 
 # à copier coller directement dans le terminal (en une fois ça marche pour récupérer les données)
 

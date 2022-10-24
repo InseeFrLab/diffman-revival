@@ -53,3 +53,13 @@ NULL
 #' @author Clement Guillo \email{clement.guillo@insee.fr}
 #' @keywords data
 NULL
+
+
+
+#' Minimal example used in order to illustrated the protection strategy
+#'
+#' @name toy_example_8
+#' @docType data
+#' @author Clement Guillo \email{clement.guillo@insee.fr}
+#' @keywords data
+NULL
