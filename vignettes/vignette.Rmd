@@ -1,0 +1,68 @@
+---
+title: "diffman tutorial"
+author: Clément Guillo
+output:
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: github
+    toc: true
+    toc_depth: 5
+vignette: >
+  %\VignetteIndexEntry{vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(diffman)
+```
+
+## Introduction 
+
+We will work here with the toy_example_6 with 2 connected components
+
+```{r}
+init_dt <- toy_example_6
+init_dt
+```
+
+## Connected components observation
+```{r}
+compo <- return_connected_components(init_dt)
+compo[,.(nb_z1 = length(z1)),by ="id_comp"][rev(order(nb_z1)),]
+```
+
+We will search from differentiation issues into the connected component number 1 with 3 z1 areas
+```{r}
+list_z1_compo <- compo[id_comp == 1]$z1
+input_dt <- init_dt[z1 %in% list_z1_compo]
+
+l_area_z1_at_risk <- find_pbm_diff_tab(input_dt = input_dt,threshold = 11, verbose = FALSE)
+
+l_area_z1_at_risk
+```
+The following zones (union of z1 elements) are identified as at-risk areas :
+- M1-M3
+- M2
+
+Let'see which reason can explain that with the function return_diff_info 
+
+```{r}
+return_diff_info(list_z1 = c("M1","M3"),threshold = 11,input_dt = input_dt)
+```
+```{r}
+return_diff_info(list_z1 = c("M2"),threshold = 11,input_dt = input_dt)
+```
+
+TODO : mette les geometries rattachées à l'example 7 en Rdata !!
+
+```{r}
+
+```

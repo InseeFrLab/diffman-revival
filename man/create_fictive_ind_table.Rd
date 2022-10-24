@@ -19,4 +19,5 @@ create the equivalent individual data.frame from a tabulate z1 x z2 data.frame w
 \examples{
 tab_table <- toy_example_1
 create_fictive_ind_table(tab_table)
+
 }

@@ -54,7 +54,7 @@ area_z1_at_risk
 
 The return diff info function allows us to know ex&actly where the differencing issue occurs (which intersection square miunicipality here)
 ```{r}
-diff_info <-return_diff_info(list_z1 = area_z1_at_risk,threshold = 11,input_dt = input_dt)
+diff_info <-diffman:::return_diff_info(list_z1 = area_z1_at_risk,threshold = 11,input_dt = input_dt)
 diff_info
 ```
 Now we can represent the at risk area with the draw situation function

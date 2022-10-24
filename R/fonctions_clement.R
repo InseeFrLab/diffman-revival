@@ -206,19 +206,14 @@ find_pbm_diff_tab <- function(
 #' @param input_dt (data.table) containing the triplets z1-z2-z1 corresponding to a connection between 2 elements of z1 throug one element of z2 with metadata
 #' @param threshold (data.table) the frequency rule threshold  below which a zone is considered at risk
 #'
-#' @return A data.table with the following columns
-#' \enumerate{
-#' \item $checked_area the area checked (z1 elements concatenated with "-")
-#' \item $z1 : the z1 elements in the z1xz2 intersections at risk
-#' \item $z2 : the z2 elements in the z1xz2 intersections at risk
-#' \item $nb_obs : the number of statistical units in the intersection z1xZ2
-#' \item $type_diff : a boolean indicating whether the zone defined by list_z1 is subject to an internal differentiation risk
-#' }
+#' @return A data.table with the diff information
 #'
 #' @examples 
-#' list_z1 <- c("M1","M2",c("M1,"M2"))
+#' list_z1 <- c("M1","M2",c("M1","M2"))
 #' input_dt <- toy_example_1
-#' diffman:::return_diff_info(list_z1,tinput_dt)
+#' diffman:::return_diff_info(list_z1,input_dt)
+#' 
+#' @export
 
 return_diff_info <- function(list_z1,input_dt, threshold = 11){
   # l_ag <- find_pbm_diff_tab(toy_example_1,15,threshold = 11,verbose = FALSE)
@@ -382,6 +377,7 @@ draw_situation <- function(situation_table,geom_z1,geom_z2,list_z1_to_color = NU
 #' @examples 
 #' tab_table <- toy_example_1
 #' create_fictive_ind_table(tab_table)
+#' 
 #' @export
 
 create_fictive_ind_table <- function(tab_table){
@@ -432,6 +428,7 @@ create_fictive_ind_table <- function(tab_table){
 #' input_dt <- toy_example_6
 #' compo <- return_connected_components(input_dt)
 #' one_component_risk_extraction(input_dt[z1 %in% compo[id_comp == 1]$z1], 11, 15)
+#' 
 #' @export
 
 one_component_risk_extraction <- function(input_dt,
@@ -484,6 +481,7 @@ one_component_risk_extraction <- function(input_dt,
 #' @examples 
 #' input_dt <- toy_example_6
 #' all_component_risk_extraction(input_dt)
+#' 
 #' @export
 all_component_risk_extraction <- function(input_dt,threshold = 11, max_agregate_size = 15, save_dir = "diff_info"){
 

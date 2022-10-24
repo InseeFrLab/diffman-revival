@@ -15,14 +15,7 @@ return_diff_info(list_z1, input_dt, threshold = 11)
 \item{threshold}{(data.table) the frequency rule threshold  below which a zone is considered at risk}
 }
 \value{
-A data.table with the following columns
-\enumerate{
-\item $checked_area the area checked (z1 elements concatenated with "-")
-\item $z1 : the z1 elements in the z1xz2 intersections at risk
-\item $z2 : the z2 elements in the z1xz2 intersections at risk
-\item $nb_obs : the number of statistical units in the intersection z1xZ2
-\item $type_diff : a boolean indicating whether the zone defined by list_z1 is subject to an internal differentiation risk
-}
+A data.table with the diff information
 }
 \description{
 Return information on at-risk-of-differenciation z1 zones

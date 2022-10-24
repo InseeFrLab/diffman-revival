@@ -32,4 +32,5 @@ perform the search of diff issue and return the diff information fro the corresp
 input_dt <- toy_example_6
 compo <- return_connected_components(input_dt)
 one_component_risk_extraction(input_dt[z1 \%in\% compo[id_comp == 1]$z1], 11, 15)
+
 }

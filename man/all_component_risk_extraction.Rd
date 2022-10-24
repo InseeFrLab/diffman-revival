@@ -38,4 +38,5 @@ perform the search of diff issue and return the diff information for all the cor
 \examples{
 input_dt <- toy_example_6
 all_component_risk_extraction(input_dt)
+
 }
