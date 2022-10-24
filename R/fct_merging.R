@@ -16,6 +16,7 @@
 #' @param i,j Entiers indiquant les zonages de z1.
 #' @param m_crois Matrice de croisement.
 #' @param col_to_suppress Vecteur d'entiers indiquant les colonnes a supprimer.
+#' @param verbose if TRUE a message is displayed if every z1 elements habs been merged
 #'
 #' @return En sortie, on a la matrice de croisement avec une ligne en moins,
 #' et potentiellement des colonnes en moins egalement.

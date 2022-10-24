@@ -5,6 +5,11 @@
 
 using namespace Rcpp;
 
+#ifdef RCPP_USE_GLOBAL_ROSTREAM
+Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
+Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
+#endif
+
 // differencierRcpp
 std::list<IntegerVector> differencierRcpp(const int iTailleCible, const int iSeuil, const IntegerVector vNbObsTerritoire, const IntegerVector vNbObsCarreaux, const IntegerMatrix mContiguiteT, const IntegerMatrix mContiguiteTC);
 RcppExport SEXP _diffman_differencierRcpp(SEXP iTailleCibleSEXP, SEXP iSeuilSEXP, SEXP vNbObsTerritoireSEXP, SEXP vNbObsCarreauxSEXP, SEXP mContiguiteTSEXP, SEXP mContiguiteTCSEXP) {

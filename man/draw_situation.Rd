@@ -6,7 +6,6 @@
 \usage{
 draw_situation(
   situation_table,
-  z2_to_nb_obs,
   geom_z1,
   geom_z2,
   list_z1_to_color = NULL,
@@ -15,9 +14,7 @@ draw_situation(
 )
 }
 \arguments{
-\item{situation_table}{a subset of the link_table build with the build_link_table_function}
-
-\item{z2_to_nb_obs}{data.table containing the number of statistical units inside each elements of z2}
+\item{situation_table}{a subset of crossing z1 x z2 with nb_obs at the intersection}
 
 \item{geom_z1}{the sf data.frame containing geometry of z1 elements referenced in the situation table}
 
@@ -35,7 +32,4 @@ A list with the following elements
 }
 \description{
 output a leaflet interactive map from a \emph{situation}, subset of lines from the link table
-}
-\examples{
-ltable<- return_diff_info(c("A","B","C"),link_table,threshold)
 }

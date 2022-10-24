@@ -7,7 +7,7 @@
 create_fictive_ind_table(tab_table)
 }
 \arguments{
-\item{input_df}{The tabulation table (data.frame or data.table). Each row
+\item{tab_table}{The tabulation table (data.frame or data.table). Each row
 corresponds to the number of statistical units in a cross defined by a modality of the z1 nomenclature and a modality of the z2 nomenclature}
 }
 \value{
@@ -17,11 +17,6 @@ the fictive individual table from the tabulation table
 create the equivalent individual data.frame from a tabulate z1 x z2 data.frame with integer (round in any case)
 }
 \examples{
-tab_table <- data.table(
-  z1 =c("A","A","B","D"),
-  z2 = c("a","b","b","a"),
-  nb_obs = c(2,5,6,0)
-  )
-
+tab_table <- toy_example_1
 create_fictive_ind_table(tab_table)
 }

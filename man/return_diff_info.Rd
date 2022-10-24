@@ -2,32 +2,29 @@
 % Please edit documentation in R/fonctions_clement.R
 \name{return_diff_info}
 \alias{return_diff_info}
-\title{Return information on at-risk-of-differnciation z1 zones
-From a given list of elements of z1, outputs all the information allowing to evaluate if a differentiation problem exists on this zone}
+\title{Return information on at-risk-of-differenciation z1 zones
+From a given list of elements of z1, outputs all the information allowing to evaluate if a differentiation problem exists on this zone (no information if no differneciation issue)}
 \usage{
-return_diff_info(list_z1, link_table, threshold)
+return_diff_info(list_z1, input_dt, threshold = 11)
 }
 \arguments{
 \item{list_z1}{vector containing the elements of z1 constituting the area to be evaluated}
 
-\item{link_table}{(data.table) containing the triplets z1-z2-z1 corresponding to a connection between 2 elements of z1 throug one element of z2 with metadata}
+\item{input_dt}{(data.table) containing the triplets z1-z2-z1 corresponding to a connection between 2 elements of z1 throug one element of z2 with metadata}
 
 \item{threshold}{(data.table) the frequency rule threshold  below which a zone is considered at risk}
 }
 \value{
-A list with the following elements
+A data.table with the following columns
 \enumerate{
 \item $checked_area the area checked (z1 elements concatenated with "-")
-\item $internal_diff_table : the data.table containing intersection z1 x z2 at risk of internal differenciation
-\item $external_diff_table : the data.table containing intersection z1 x z2 at risk of external differenciation
-\item $internal_diff_issue : a boolean indicating whether the zone defined by list_z1 is subject to an internal differentiation risk
-\item $external_diff_issue : a boolean indicating whether the zone defined by list_z1 is subject to an external differentiation risk
+\item $z1 : the z1 elements in the z1xz2 intersections at risk
+\item $z2 : the z2 elements in the z1xz2 intersections at risk
+\item $nb_obs : the number of statistical units in the intersection z1xZ2
+\item $type_diff : a boolean indicating whether the zone defined by list_z1 is subject to an internal differentiation risk
 }
 }
 \description{
-Return information on at-risk-of-differnciation z1 zones
-From a given list of elements of z1, outputs all the information allowing to evaluate if a differentiation problem exists on this zone
-}
-\examples{
-ltable<- return_diff_info(c("A","B","C"),link_table,threshold)
+Return information on at-risk-of-differenciation z1 zones
+From a given list of elements of z1, outputs all the information allowing to evaluate if a differentiation problem exists on this zone (no information if no differneciation issue)
 }

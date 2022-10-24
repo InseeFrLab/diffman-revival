@@ -1,9 +1,9 @@
 Package: diffman
 Type: Package
 Title: Detect Differentiation Problems
-Version: 0.1.1
+Version: 0.2.0
 Date: 2020-02-28
-Maintainer: Vianney Costemalle <vianney.costemalle@insee.fr>
+Maintainer: Clement Guillo <clement.guillo@insee.fr>
 Description: An algorithm based on graph theory tools to detect differentiation
     problems. A differentiation problem occurs when aggregated 
     data are disseminated according to two different nomenclatures. By making the
@@ -18,11 +18,20 @@ Description: An algorithm based on graph theory tools to detect differentiation
 License: GPL (>= 2)
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.0.2
+RoxygenNote: 7.2.1
 Suggests: 
     testthat (>= 3.0.0)
-Imports: tidyverse, igraph, progress, Rcpp, sf, dplyr, Matrix,
-        data.table
+Imports: 
+    Matrix,
+    igraph,
+    progress,
+    Rcpp,
+    sf,
+    leaflet,
+    htmltools,
+    htmlwidgets,
+    data.table,
+    methods
 LinkingTo: Rcpp
 Authors@R: c(person("Vianney", "Costemalle", email = "vianney.costemalle@insee.fr", role = c("aut", "cre")),person("Arlindo", "Dos Santos", email = "arlindo.dos.santos@insee.fr", role = "aut"),person("Francois", "Semecurbe", email = "francois.semecurbe@insee.fr", role = "aut"))
 NeedsCompilation: yes

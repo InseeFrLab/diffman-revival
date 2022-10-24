@@ -2,19 +2,20 @@
 % Please edit documentation in R/fonctions_clement.R
 \name{return_connected_components}
 \alias{return_connected_components}
-\title{Return elements of z1 graph nodes with the associated connected components}
+\title{Return elements of z1 with associated cobnnected components id from a given z1 x z2 crossing data.table}
 \usage{
-return_connected_components(link_table)
+return_connected_components(input_dt)
 }
 \arguments{
-\item{link_table}{(data.table) containing the triplets z1-z2-z1 corresponding to a connection between 2 elements of z1 throug one element of z2}
+\item{input_dt}{(data.table) containing the z1xz2 crossing data with nb_obs}
 }
 \value{
-the node_table, each a line corresponds to an element of z1 with the identifier of the connected component to which it belongs in the graph of elements of z1
+a data table where associating each z1 to the id of its connected component
 }
 \description{
-Return elements of z1 graph nodes with the associated connected components
+Return elements of z1 with associated cobnnected components id from a given z1 x z2 crossing data.table
 }
 \examples{
-link_table<- return_connected_components(link_table)
+input_dt <- toy_example_6
+link_table <- return_connected_components(input_dt)
 }

@@ -4,10 +4,10 @@
 \alias{build_m_crois}
 \title{Build the cross matrix}
 \usage{
-build_m_crois(link_table)
+build_m_crois(input_dt)
 }
 \arguments{
-\item{link_table}{(data.table) containing the triplets z1-z2-z1 corresponding to a connection between 2 elements of z1 throug one element of z2}
+\item{input_dt}{(data.table) containing the z1 x z2 crossing with out duplicated lines}
 }
 \value{
 returns the crossover matrix (SparseMatrix), whose rows represent the elements of z1 and the columns the elements of z2 (possibly aggregated if they contribute to the same connection) and whose values are equal to the number of statistical units in the considered z1 x z2 crossover
@@ -16,5 +16,6 @@ returns the crossover matrix (SparseMatrix), whose rows represent the elements o
 Build the cross matrix
 }
 \examples{
-m_crois<- build_mcrois(link_table)
+input_dt <- toy_example_6
+m_crois<- diffman:::build_m_crois(input_dt)
 }

@@ -26,18 +26,16 @@ p <- lapply(paquets, function(p) suppressPackageStartupMessages(library(p, chara
 
 ### Ce code sera amené à disparaitre, en fire une vignette ! ou bien un rmd !!!
 #### Test sur données réelles 
-data_rp <- data.table(readRDS("data/data_rp.rds"))
+data_rp <- data.table(readRDS("ext_data/data_rp.rds"))
 compo <- return_connected_components(data_rp)
 compo[,.(nb_com = length(z1)),by ="id_comp"][rev(order(nb_com)),]
-
-
 ```
 
 Here the R session explodes if  we put the whole data.frame in entry so we can work component by component thanks to the last function. the bigger contains more than 18000 municipalities !!
 Here we will tests with id_comp 1232 !
 
 ```{r}
-list_z1_compo <- compo[id_comp == 1232]$z1
+list_z1_compo <- compo[id_comp == 329]$z1
 input_dt <- data_rp[z1 %in% list_z1_compo]
 
 l_area_z1_at_risk <- find_pbm_diff_tab(input_dt = input_dt,threshold = 11 )
@@ -52,12 +50,11 @@ head(l_area_z1_at_risk,8)
 area_z1_at_risk <- l_area_z1_at_risk[[14]]
 area_z1_at_risk
 
-
 ```
 
 The return diff info function allows us to know ex&actly where the differencing issue occurs (which intersection square miunicipality here)
 ```{r}
-diff_info <-return_diff_info(list_z1 = area_z1_at_risk,threshold = 11,input_dt)
+diff_info <-return_diff_info(list_z1 = area_z1_at_risk,threshold = 11,input_dt = input_dt)
 diff_info
 ```
 Now we can represent the at risk area with the draw situation function
@@ -94,7 +91,7 @@ carreaux_to_polygon <- function(data, var_carreau){
   
 }
 
-communes <-st_read("data/commune_franceentiere_2021.shp")
+communes <-sf::st_read("ext_data/commune_franceentiere_2021.shp")
 
 ```  
 
@@ -109,7 +106,7 @@ liste_carreau <- situation_table$z2
 
 polygone_carreau <-
   carreaux_to_polygon(data.frame(carreau = liste_carreau), var_carreau = "carreau") %>%
-  st_transform(crs = 4326)
+  sf::st_transform(crs = 4326)
 
 geom_z1 <- communes %>%
   filter(code %in% unique(c(situation_table$z1))) %>%
@@ -233,9 +230,9 @@ return_diff_info(list_z1 = res4[[1]] ,input_dt = toy_example_4,threshold = 11)
 
 # à copier coller directement dans le terminal (en une fois ça marche pour récupérer les données)
 
-mc cp s3/cguillo/commune_franceentiere_2021.dbf data/commune_franceentiere_2021.dbf
-mc cp s3/cguillo/commune_franceentiere_2021.fix data/commune_franceentiere_2021.fix
-mc cp s3/cguillo/commune_franceentiere_2021.prj data/commune_franceentiere_2021.prj
-mc cp s3/cguillo/commune_franceentiere_2021.shp data/commune_franceentiere_2021.shp
-mc cp s3/cguillo/commune_franceentiere_2021.shx data/commune_franceentiere_2021.shx
+mc cp s3/cguillo/commune_franceentiere_2021.dbf ext_data/commune_franceentiere_2021.dbf
+mc cp s3/cguillo/commune_franceentiere_2021.fix ext_data/commune_franceentiere_2021.fix
+mc cp s3/cguillo/commune_franceentiere_2021.prj ext_data/commune_franceentiere_2021.prj
+mc cp s3/cguillo/commune_franceentiere_2021.shp ext_data/commune_franceentiere_2021.shp
+mc cp s3/cguillo/commune_franceentiere_2021.shx ext_data/commune_franceentiere_2021.shx
 mc cp s3/cguillo/data_rp.rds data/data_rp.rds

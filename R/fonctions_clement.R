@@ -6,11 +6,14 @@
 #'
 #' @return the cleaned tabulation table 
 #'
-#' @examples 
-#' cleaned_dt<- clean_init_dt(input_dt)
+#' @examples
+#' input_dt<- toy_example_6
+#' cleaned_dt <- diffman:::clean_init_dt(input_dt)
 
 clean_init_dt <- function(input_dt){
   #input_dt <- dt
+  
+  nb_obs <- z1 <- z2 <- NULL
   dt <- copy(input_dt)
   dt <- dt[,.(nb_obs = sum(nb_obs)),by = .(z1,z2)] # agregates count on duplicated lines !
   
@@ -28,13 +31,12 @@ clean_init_dt <- function(input_dt){
 #' @return a data table where associating each z1 to the id of its connected component 
 #'
 #' @examples 
-#' link_table<- return_connected_components(link_table)
+#' input_dt <- toy_example_6
+#' link_table <- return_connected_components(input_dt)
+#' @export
 
 return_connected_components<-function(input_dt){
   
-  #input_dt <- toy_example_3
-  #input_dt <- toy_example_4
-  #input_dt <- data.table(data_rp)
   # Construction du graph
   # https://igraph.org/r/#docs  joli !
   dt <- copy(input_dt)
@@ -43,7 +45,7 @@ return_connected_components<-function(input_dt){
   m_crois <- build_m_crois(l$intersecting_z2)
   
   adjacency_matrix <- m_crois%*%t(m_crois)
-  adjacency_matrix <- as(adjacency_matrix,"lsparseMatrix")
+  adjacency_matrix <- methods::as(adjacency_matrix,"lsparseMatrix")
   
   graph <- igraph::graph_from_adjacency_matrix(adjacency_matrix)
   clust <- igraph::clusters(graph)
@@ -57,15 +59,18 @@ return_connected_components<-function(input_dt){
 
 #' Build the cross matrix 
 #'
-#' @param dt (data.table) containing the z1 x z2 crossing with out duplicated lines
+#' @param input_dt (data.table) containing the z1 x z2 crossing with out duplicated lines
 #'
 #' @return returns the crossover matrix (SparseMatrix), whose rows represent the elements of z1 and the columns the elements of z2 (possibly aggregated if they contribute to the same connection) and whose values are equal to the number of statistical units in the considered z1 x z2 crossover
 #'
 #' @examples 
-#' m_crois<- build_mcrois(link_table)
+#' input_dt <- toy_example_6
+#' m_crois<- diffman:::build_m_crois(input_dt)
 
 build_m_crois <- function(input_dt){
   # dt <- ltable
+  z1 <- z2 <- NULL
+  
   dt <- copy(input_dt)
   dt[, ":="(z1 = factor(z1), z2 = factor(z2))]
   
@@ -89,6 +94,9 @@ build_m_crois <- function(input_dt){
 
 prepare_data <- function(input_dt){
   # input_df <- toy_example_3
+  
+  z1 <- z2 <- nb_z1 <- NULL
+  
   dt <- copy(input_dt)
   dt <- clean_init_dt(dt)
   
@@ -122,7 +130,12 @@ prepare_data <- function(input_dt){
 #' on a agregate of n observations where n < threshold.
 #' 
 #' @return the list of  at-risk zones defined by unions of z1 elements  
-
+#' 
+#' @examples 
+#' input_dt <- toy_example_6
+#' find_pbm_diff_tab(input_dt)
+#' 
+#' @export
 find_pbm_diff_tab <- function(
     input_dt,
     max_agregate_size = 15,
@@ -131,9 +144,7 @@ find_pbm_diff_tab <- function(
     verbose = TRUE,
     threshold = 11
 ){
-  # input_df <- toy_example_4
-  # threshold = 11; max_agregate_size = 15;save_file = NULL; simplify = TRUE; verbose = TRUE
-  
+
   z2_b<- z1 <- z2 <- nb_obs <- NULL
   
   dt <- copy(input_dt)
@@ -171,7 +182,6 @@ find_pbm_diff_tab <- function(
   l_ag <- desagregate_list(l_ag) 
   
   if(!is.null(save_intermediate_data_file)) {
-    # save_1 save_intermediate_data_file = "res_grosse_composante"
     saveRDS(
       list(
         m_crois = m_crois,
@@ -193,7 +203,7 @@ find_pbm_diff_tab <- function(
 #' From a given list of elements of z1, outputs all the information allowing to evaluate if a differentiation problem exists on this zone (no information if no differneciation issue)
 #'
 #' @param list_z1  vector containing the elements of z1 constituting the area to be evaluated
-#' @param dt (data.table) containing the triplets z1-z2-z1 corresponding to a connection between 2 elements of z1 throug one element of z2 with metadata
+#' @param input_dt (data.table) containing the triplets z1-z2-z1 corresponding to a connection between 2 elements of z1 throug one element of z2 with metadata
 #' @param threshold (data.table) the frequency rule threshold  below which a zone is considered at risk
 #'
 #' @return A data.table with the following columns
@@ -206,12 +216,20 @@ find_pbm_diff_tab <- function(
 #' }
 #'
 #' @examples 
-#' ltable<- return_diff_info(c("A","B","C"),link_table,threshold)
+#' list_z1 <- c("M1","M2",c("M1,"M2"))
+#' input_dt <- toy_example_1
+#' diffman:::return_diff_info(list_z1,tinput_dt)
 
-return_diff_info <- function(list_z1,dt, threshold){
+return_diff_info <- function(list_z1,input_dt, threshold = 11){
   # l_ag <- find_pbm_diff_tab(toy_example_1,15,threshold = 11,verbose = FALSE)
-  # list_z1 <- l_ag[[1]]
+  # list_z1 <- l_ag[[1]]de
+  # list_z1 = area_z1_at_risk;threshold = 11;dt = input_dt
   
+  z1 <- z2 <- NULL
+  
+  dt <- copy(input_dt)
+  
+  dt <- clean_init_dt(dt)
   # all of the z2 elements partially or fully included in the area defined by list_z1, (and not fully included in one element of z1, only crossing z1, z2 elements are interesting here)
   z2_target <- dt[z1 %in% list_z1,]$z2 
   
@@ -262,26 +280,28 @@ return_diff_info <- function(list_z1,dt, threshold){
 #' 
 #' @return A list with the following elements
 #' 
-#' @examples 
-#' ltable<- return_diff_info(c("A","B","C"),link_table,threshold)
+#' @export
 
 draw_situation <- function(situation_table,geom_z1,geom_z2,list_z1_to_color = NULL ,threshold = 11,save_name = NULL){
   
-  l <- prepare_data(situation_table)
-  situation_table <-l$intersecting_z2
+  nb_obs <- z2 <- z1 <- NULL
   
-  z2_to_nb_obs <- situation_table[,.(nb_obs_z2=sum(nb_obs)),by = z2]
+  dt <- copy(situation_table)
+  l <- prepare_data(dt)
+  dt <-l$intersecting_z2
+  
+  z2_to_nb_obs <- dt[,.(nb_obs_z2=sum(nb_obs)),by = z2]
   
   # build the z1 x z2 intersection geometry
-  st_agr(geom_z1) = "constant"
-  st_agr(geom_z2) = "constant"
+  sf::st_agr(geom_z1) = "constant"
+  sf::st_agr(geom_z2) = "constant"
   
   inter_carreau_commune <-sf::st_intersection(
-    geom_z1 %>% select(z1),
-    geom_z2 %>% select(z2)
+    geom_z1[,"z1"],
+    geom_z2[,"z2"]
   )
   
-  inter_carreau_commune <- merge(situation_table,inter_carreau_commune,by = c("z1","z2"))
+  inter_carreau_commune <- merge(dt,inter_carreau_commune,by = c("z1","z2"))
   
   geom_z2 <- merge(geom_z2,z2_to_nb_obs,by ="z2",nomatch = 0)
   
@@ -360,13 +380,9 @@ draw_situation <- function(situation_table,geom_z1,geom_z2,list_z1_to_color = NU
 #' @return the fictive individual table from the tabulation table 
 #'
 #' @examples 
-#' tab_table <- data.table(
-#'   z1 =c("A","A","B","D"),
-#'   z2 = c("a","b","b","a"),
-#'   nb_obs = c(2,5,6,0)
-#'   )
-#'
+#' tab_table <- toy_example_1
 #' create_fictive_ind_table(tab_table)
+#' @export
 
 create_fictive_ind_table <- function(tab_table){
   
@@ -403,7 +419,6 @@ create_fictive_ind_table <- function(tab_table){
 #' @param input_dt The tabulation table (data.frame or data.table). Each row
 #' corresponds to the number of statistical units in a cross defined by a modality of the z1 nomenclature and a modality of the z2 nomenclature
 #' z1 has to belong to the same related component (regarding the graph construction)
-#' 
 #' @param max_agregate_size Integer indicating the maximal size of agregates
 #' which are tested exhaustively. If that number is too large (greater than 30), the
 #' computations may not end because of the combinations number that can become very large.
@@ -417,6 +432,7 @@ create_fictive_ind_table <- function(tab_table){
 #' input_dt <- toy_example_6
 #' compo <- return_connected_components(input_dt)
 #' one_component_risk_extraction(input_dt[z1 %in% compo[id_comp == 1]$z1], 11, 15)
+#' @export
 
 one_component_risk_extraction <- function(input_dt,
                                           threshold,
@@ -464,11 +480,12 @@ one_component_risk_extraction <- function(input_dt,
 #' on a agregate of n observations where n < threshold.
 #' 
 #' @return a data.table containning the diff info for this componet (same format than the return diff info function)
-#'
+#' 
 #' @examples 
 #' input_dt <- toy_example_6
-#' all_component_risk_extraction(input_dt, 11, 15,"diff_info")
-all_component_risk_extraction <- function(input_dt,threshold = 11, max_agregate_size = 15, save_dir){
+#' all_component_risk_extraction(input_dt)
+#' @export
+all_component_risk_extraction <- function(input_dt,threshold = 11, max_agregate_size = 15, save_dir = "diff_info"){
 
   # list_z1_compo <- compo[id_comp %in% c(22),]$z1
   # input_dt <- data_rp[z1 %in% list_z1_compo]
@@ -518,14 +535,12 @@ all_component_risk_extraction <- function(input_dt,threshold = 11, max_agregate_
 
 
 #' Read diff_info info from files into a given directory and rbind them
-#' @param save_dir the directory where the diff_info files are included
+#' @param save_dir the directory where the diff_info files (from all_component_risk_extraction) are included
 #' 
 #' @return a data.table containning all the diff info for all related components
-#'
-#' @examples 
-#' input_dt <- toy_example_6
-#' all_component_risk_extraction(input_dt, 11, 15,"diff_info")
-#' read_diff_info("diff_info")
+#' 
+#' @export
+
 read_diff_info <- function(save_dir){
   # save_dir <- "diff_info"
   l_res<- paste0(save_dir,"/",list.files(save_dir))

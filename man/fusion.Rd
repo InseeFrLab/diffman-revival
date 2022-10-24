@@ -4,7 +4,7 @@
 \alias{fusion}
 \title{Fonction qui fusionne les zones numero i et numero j}
 \usage{
-fusion(i, j, m_crois, col_to_suppress)
+fusion(i, j, m_crois, col_to_suppress, verbose = FALSE)
 }
 \arguments{
 \item{i, j}{Entiers indiquant les zonages de z1.}
@@ -12,6 +12,8 @@ fusion(i, j, m_crois, col_to_suppress)
 \item{m_crois}{Matrice de croisement.}
 
 \item{col_to_suppress}{Vecteur d'entiers indiquant les colonnes a supprimer.}
+
+\item{verbose}{if TRUE a message is displayed if every z1 elements habs been merged}
 }
 \value{
 En sortie, on a la matrice de croisement avec une ligne en moins,

@@ -3,10 +3,10 @@
 \name{find_pbm_diff_tab}
 \alias{find_pbm_diff_tab}
 \title{Find at-risk-of-differenciation areas.
-Build the crossover matrix defined in build_m_crossover, and operates the graph reduction functions on it and then returns the z1-zones (union of elements of z1) at risk}
+Build the crossover matrix defined in build_m_crois, and operates the graph reduction functions on it and then returns the z1-zones (union of elements of z1) at risk}
 \usage{
 find_pbm_diff_tab(
-  link_table,
+  input_dt,
   max_agregate_size = 15,
   save_intermediate_data_file = NULL,
   simplify = TRUE,
@@ -15,7 +15,7 @@ find_pbm_diff_tab(
 )
 }
 \arguments{
-\item{link_table}{(data.table) containing the triplets z1-z2-z1 corresponding to a connection between 2 elements of z1 throug one element of z2 with metadata}
+\item{input_dt}{(data.table) containing the z2 x z2 crossing with counts, tabulation table}
 
 \item{max_agregate_size}{Integer indicating the maximal size of agregates
 which are tested exhaustively. If that number is too large (greater than 30), the
@@ -41,5 +41,10 @@ the list of  at-risk zones defined by unions of z1 elements
 }
 \description{
 Find at-risk-of-differenciation areas.
-Build the crossover matrix defined in build_m_crossover, and operates the graph reduction functions on it and then returns the z1-zones (union of elements of z1) at risk
+Build the crossover matrix defined in build_m_crois, and operates the graph reduction functions on it and then returns the z1-zones (union of elements of z1) at risk
+}
+\examples{
+input_dt <- toy_example_6
+find_pbm_diff_tab(input_dt)
+
 }
