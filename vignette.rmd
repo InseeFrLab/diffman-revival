@@ -171,6 +171,8 @@ e-s
 
 global_diff_info <- read_diff_info("diff_info")
 
+# à comparer avec le nombre de communes dzns chaque compo
+global_diff_info[,.(n= length(z1)),by ="id_comp"][rev(order(n))]
 ```
 
 ```{r}
