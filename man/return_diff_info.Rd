@@ -21,3 +21,9 @@ A data.table with the diff information
 Return information on at-risk-of-differenciation z1 zones
 From a given list of elements of z1, outputs all the information allowing to evaluate if a differentiation problem exists on this zone (no information if no differneciation issue)
 }
+\examples{
+list_z1 <- c("M1","M2",c("M1","M2"))
+input_dt <- toy_example_1
+diffman:::return_diff_info(list_z1,input_dt)
+
+}

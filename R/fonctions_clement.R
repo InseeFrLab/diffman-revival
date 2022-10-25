@@ -270,6 +270,7 @@ return_diff_info <- function(list_z1,input_dt, threshold = 11){
 #' @param geom_z2 the sf data.frame containing geometry of z2 elements referenced in the situation table 
 #' @param list_z1_to_color list of z1 elements whichh polygon will be colored in the output interactive map
 #' @param threshold Strictly positive integer indicating the confidentiality
+#' @param inside_geom_z2 the sf data.frame containing geometry of z2 elements corresponding to the z2 inside the area defined by the situation table
 #' threshold. z1 x z2 intersections which number of statistical units is under the threshold are colored in red
 #' @param save_name boolean, if not nul the map is saved in the diffman_results with the given name
 #' 

@@ -29,7 +29,8 @@ devtools::load_all()
 #### Test sur données réelles 
 data_rp <- data.table(readRDS("ext_data/data_rp.rds"))
 compo <- return_connected_components(data_rp)
-compo[,.(nb_com = length(z1)),by ="id_comp"][rev(order(nb_com)),]
+comp_to_nb_com <- compo[,.(nb_com = length(z1)),by ="id_comp"][rev(order(nb_com)),]
+comp_to_nb_com
 ```
 
 Here the R session explodes if  we put the whole data.frame in entry so we can work component by component thanks to the last function. the bigger contains more than 18000 municipalities !!
@@ -166,11 +167,45 @@ all_component_risk_extraction(
 e <- Sys.time()
 
 e-s
+```
+1 h de temps dont 30 min pour la grosse composante connexe
 
+## Lecture des résultats
+
+```{r}
+
+input_dt <- data_rp
 global_diff_info <- read_diff_info("diff_info")
 
+head(global_diff_info)
+```
+
 # à comparer avec le nombre de communes dzns chaque compo
-global_diff_info[,.(n= length(z1)),by ="id_comp"][rev(order(n))]
+```{r}
+comp_to_n_area <- global_diff_info[,.(n_at_risk_area= length(unique(checked_area))),by ="id_comp"][rev(order(n_at_risk_area))]
+comp_to_nb_com[,id_comp := as.character(id_comp)]
+
+comp_info <- merge(comp_to_n_area,comp_to_nb_com,by ="id_comp")
+comp_info[,ratio_risk_nb_com:= n_at_risk_area/nb_com]
+
+library(ggplot2)
+
+comp_info %>% 
+  ggplot()+
+  geom_point(aes(y= ratio_risk_nb_com, x = nb_com))
+```
+On voit pas grand chose si ce n'est que la grosse composante n'a pas tant de zones à risque ce qui doit être proche de l'idée de morcellement de la zone elle doit tenir sur quelques points faibles (peu d'intersection fragiles. (a pousser )
+
+### N checked area 
+```{r}
+global_diff_info
+
+```
+
+### N carreaux
+```{r}
+
+
 ```
 
 ## Petit laius sur la stratégie de blanchiment pour le RP

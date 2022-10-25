@@ -9,6 +9,7 @@ draw_situation(
   geom_z1,
   geom_z2,
   list_z1_to_color = NULL,
+  inside_geom_z2 = NULL,
   threshold = 11,
   save_name = NULL
 )
