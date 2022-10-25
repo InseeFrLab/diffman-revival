@@ -144,7 +144,7 @@ find_pbm_diff_tab <- function(
     verbose = TRUE,
     threshold = 11
 ){
-
+  
   z2_b<- z1 <- z2 <- nb_obs <- NULL
   
   dt <- copy(input_dt)
@@ -277,7 +277,7 @@ return_diff_info <- function(list_z1,input_dt, threshold = 11){
 #' 
 #' @export
 
-draw_situation <- function(situation_table,geom_z1,geom_z2,list_z1_to_color = NULL ,threshold = 11,save_name = NULL){
+draw_situation <- function(situation_table,geom_z1,geom_z2,list_z1_to_color = NULL , inside_geom_z2 = NULL, threshold = 11,save_name = NULL){
   
   nb_obs <- z2 <- z1 <- NULL
   
@@ -291,12 +291,12 @@ draw_situation <- function(situation_table,geom_z1,geom_z2,list_z1_to_color = NU
   sf::st_agr(geom_z1) = "constant"
   sf::st_agr(geom_z2) = "constant"
   
-  inter_carreau_commune <-sf::st_intersection(
+  inter_z2_z1 <-sf::st_intersection(
     geom_z1[,"z1"],
     geom_z2[,"z2"]
   )
   
-  inter_carreau_commune <- merge(dt,inter_carreau_commune,by = c("z1","z2"))
+  inter_z2_z1 <- merge(dt,inter_z2_z1,by = c("z1","z2"))
   
   geom_z2 <- merge(geom_z2,z2_to_nb_obs,by ="z2",nomatch = 0)
   
@@ -341,24 +341,48 @@ draw_situation <- function(situation_table,geom_z1,geom_z2,list_z1_to_color = NU
   m <- 
     leaflet::addPolygons(
       m,
-      data = inter_carreau_commune$geometry,
-      color = ifelse(inter_carreau_commune$nb_obs < threshold,"red","#6E3DFF"),
+      data = inter_z2_z1$geometry,
+      color = ifelse(inter_z2_z1$nb_obs < threshold,"red","#6E3DFF"),
       weight = 2,
       fillOpacity = 0.5,
       group = "intersections",
       highlightOptions = highlightOptions_defaut,
-      label  =  with(inter_carreau_commune, 
-                     sprintf(
-                       "<b> id z1 : </b> %s  <br/> <b> id z2 : </b>  %s <br/> <b> Number of observations : </b>  %s", 
-                       z1, z2, round(nb_obs,1)
-                     ) %>% lapply(htmltools::HTML)
+      label  =  with(
+        inter_z2_z1, 
+        lapply(
+          sprintf(
+            "<b> id z1 : </b> %s  <br/> <b> id z2 : </b>  %s <br/> <b> Number of observations : </b>  %s", 
+            z1, z2, round(nb_obs,1)
+          ),
+          htmltools::HTML)
       )
     )
+group_names <- c("z2 on two sides of one z1 area","intersections")  
+
+  if (!is.null(inside_geom_z2)){
+    m <-
+      leaflet::addPolygons(
+        m,
+        data = inside_geom_z2,
+        color = "#04117A",
+        weight = 3,
+        fillOpacity = 0.1,
+        group = "inside z2",
+        label = htmltools::HTML(
+          sprintf(
+            "<b> id z2 : </b> %s",
+            inside_geom_z2$z2
+          )
+        )
+      )
+    group_names <- c(group_names,"inside z2") 
+  }
+  
   m <- leaflet::addScaleBar(m,position="bottomright") 
-  m <- leaflet::hideGroup(m,c("z2 on two sides of one z1 area","intersections")) 
+  m <- leaflet::hideGroup(m,group_names) 
   m <- leaflet::addLayersControl(m,
-                        overlayGroups = c("z2 on two sides of one z1 area","intersections"),
-                        options = leaflet::layersControlOptions(collapsed = FALSE)
+                                 overlayGroups = group_names,
+                                 options = leaflet::layersControlOptions(collapsed = FALSE)
   )
   m <- leaflet::addScaleBar(m,position="bottomright")
   
@@ -484,7 +508,7 @@ one_component_risk_extraction <- function(input_dt,
 #' 
 #' @export
 all_component_risk_extraction <- function(input_dt,threshold = 11, max_agregate_size = 15, save_dir = "diff_info"){
-
+  
   # list_z1_compo <- compo[id_comp %in% c(22),]$z1
   # input_dt <- data_rp[z1 %in% list_z1_compo]
   
@@ -525,7 +549,7 @@ all_component_risk_extraction <- function(input_dt,threshold = 11, max_agregate_
     
     # tot_diff_info
   }
-
+  
   l_risk_compo <-lapply(seq_along(l_input_dt),extract_info_and_save)
   
   return(z1_to_component)# in order to be able to link saved file name and z1 elements
