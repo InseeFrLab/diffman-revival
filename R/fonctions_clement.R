@@ -9,6 +9,7 @@
 #' @examples
 #' input_dt<- toy_example_6
 #' cleaned_dt <- diffman:::clean_init_dt(input_dt)
+#' @export
 
 clean_init_dt <- function(input_dt){
   #input_dt <- dt
