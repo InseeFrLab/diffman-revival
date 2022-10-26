@@ -8,7 +8,7 @@ output:
     toc: true
     toc_depth: 5
 vignette: >
-  %\VignetteIndexEntry{vignette}
+  %\VignetteIndexEntry{diffman}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
