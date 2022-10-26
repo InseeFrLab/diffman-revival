@@ -33,7 +33,8 @@ Imports:
     htmltools,
     htmlwidgets,
     data.table,
-    methods
+    methods,
+    prettydoc
 LinkingTo: Rcpp
 Authors@R: c(person("Vianney", "Costemalle", email = "vianney.costemalle@insee.fr", role = c("aut", "cre")),person("Arlindo", "Dos Santos", email = "arlindo.dos.santos@insee.fr", role = "aut"),person("Francois", "Semecurbe", email = "francois.semecurbe@insee.fr", role = "aut"))
 NeedsCompilation: yes
