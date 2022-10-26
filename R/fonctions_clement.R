@@ -386,8 +386,9 @@ draw_situation <- function(situation_table,geom_z1,geom_z2,list_z1_to_color = NU
         m,
         data = geom_z2_inside,
         color = "#04117A",
-        weight = 3,
+        weight = 2,
         fillOpacity = 0.1,
+        opacity = 1,
         group = "inside z2",
         label = lapply(
           sprintf(
