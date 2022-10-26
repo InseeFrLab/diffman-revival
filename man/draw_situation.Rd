@@ -2,14 +2,13 @@
 % Please edit documentation in R/fonctions_clement.R
 \name{draw_situation}
 \alias{draw_situation}
-\title{output a leaflet interactive map from a \emph{situation}, subset of lines from the link table}
+\title{output a leaflet interactive map from a \emph{situation}, corresponding to tthe set of information needed ton interpretn differencing issue s in a zone built frolmz1 elements}
 \usage{
 draw_situation(
   situation_table,
   geom_z1,
   geom_z2,
   list_z1_to_color = NULL,
-  inside_geom_z2 = NULL,
   threshold = 11,
   save_name = NULL
 )
@@ -32,5 +31,5 @@ threshold. z1 x z2 intersections which number of statistical units is under the 
 A list with the following elements
 }
 \description{
-output a leaflet interactive map from a \emph{situation}, subset of lines from the link table
+output a leaflet interactive map from a \emph{situation}, corresponding to tthe set of information needed ton interpretn differencing issue s in a zone built frolmz1 elements
 }

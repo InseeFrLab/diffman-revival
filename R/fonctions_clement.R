@@ -90,15 +90,29 @@ build_m_crois <- function(input_dt){
 #'
 #' @param input_dt (data.table) containing the z2 x z2 crossing with counts, tabulation table
 #' 
-#' @return data.table containing only the z2 intersecting 2 z1
+#' @return a list with the intersection on the first element and the llines corresponding to the fully included square in the second element
 
 prepare_data <- function(input_dt){
   # input_df <- toy_example_3
   
-  z1 <- z2 <- nb_z1 <- NULL
-  
   dt <- copy(input_dt)
   dt <- clean_init_dt(dt)
+  
+  out <- isolate_intersection(dt)
+  
+  return(out)
+}
+
+#' Isolate intersection z2xz1 from z2 lines where z2 is fully included in z1 
+#' @param input_dt (data.table) containing the z2 x z2 crossing with counts, tabulation table
+#' 
+#' @return a list with the intersection on the first element and the llines corresponding to the fully included square in the second element
+#' @export
+
+isolate_intersection <- function(input_dt){
+  
+  z1 <- z2 <- nb_z1 <- NULL
+  dt <- copy(input_dt)
   
   ## z2 intersecting only one element of z1
   dt_z2 <- dt[,.(nb_z1=length(z1)),by=.(z2)]
@@ -108,7 +122,7 @@ prepare_data <- function(input_dt){
   out <- list(intersecting_z2 = dt_z2_multi_z1,fully_included_z2 = dt_z2_mono_z1)
   
   return(out)
-}
+} 
 
 #' Find at-risk-of-differenciation areas.
 #' Build the crossover matrix defined in build_m_crois, and operates the graph reduction functions on it and then returns the z1-zones (union of elements of z1) at risk 
@@ -263,14 +277,13 @@ return_diff_info <- function(list_z1,input_dt, threshold = 11){
 
 
 
-#' output a leaflet interactive map from a \emph{situation}, subset of lines from the link table
+#' output a leaflet interactive map from a \emph{situation}, corresponding to tthe set of information needed ton interpretn differencing issue s in a zone built frolmz1 elements
 #'
 #' @param situation_table  a subset of crossing z1 x z2 with nb_obs at the intersection
 #' @param geom_z1 the sf data.frame containing geometry of z1 elements referenced in the situation table 
 #' @param geom_z2 the sf data.frame containing geometry of z2 elements referenced in the situation table 
 #' @param list_z1_to_color list of z1 elements whichh polygon will be colored in the output interactive map
 #' @param threshold Strictly positive integer indicating the confidentiality
-#' @param inside_geom_z2 the sf data.frame containing geometry of z2 elements corresponding to the z2 inside the area defined by the situation table
 #' threshold. z1 x z2 intersections which number of statistical units is under the threshold are colored in red
 #' @param save_name boolean, if not nul the map is saved in the diffman_results with the given name
 #' 
@@ -278,29 +291,34 @@ return_diff_info <- function(list_z1,input_dt, threshold = 11){
 #' 
 #' @export
 
-draw_situation <- function(situation_table,geom_z1,geom_z2,list_z1_to_color = NULL , inside_geom_z2 = NULL, threshold = 11,save_name = NULL){
+draw_situation <- function(situation_table,geom_z1,geom_z2,list_z1_to_color = NULL, threshold = 11,save_name = NULL){
   
   nb_obs <- z2 <- z1 <- NULL
   
   dt <- copy(situation_table)
-  l <- prepare_data(dt)
-  dt <-l$intersecting_z2
-  
+  dt <- clean_init_dt(dt)
   z2_to_nb_obs <- dt[,.(nb_obs_z2=sum(nb_obs)),by = z2]
+  
+  l <- isolate_intersection(dt)
+  intersect_dt <-l$intersecting_z2
+  inside_dt <- l$fully_included_z2
+  
+  geom_z2_inter <- geom_z2[geom_z2$z2 %in% intersect_dt$z2,]
+  geom_z2_inside <-  geom_z2[geom_z2$z2 %in% inside_dt$z2,]
+  
+  geom_z2_inter <- merge(geom_z2_inter,z2_to_nb_obs,by ="z2",nomatch = 0)
+  geom_z2_inside <- merge(geom_z2_inside,z2_to_nb_obs,by ="z2",nomatch = 0)
   
   # build the z1 x z2 intersection geometry
   sf::st_agr(geom_z1) = "constant"
-  sf::st_agr(geom_z2) = "constant"
+  sf::st_agr(geom_z2_inter) = "constant"
   
   inter_z2_z1 <-sf::st_intersection(
     geom_z1[,"z1"],
-    geom_z2[,"z2"]
+    geom_z2_inter[,"z2"]
   )
   
   inter_z2_z1 <- merge(dt,inter_z2_z1,by = c("z1","z2"))
-  
-  geom_z2 <- merge(geom_z2,z2_to_nb_obs,by ="z2",nomatch = 0)
-  
   z1_fillColor <- with(geom_z1,ifelse(z1 %in% list_z1_to_color,"orange","#3FC8FC"))
   
   highlightOptions_defaut <- leaflet::highlightOptions(
@@ -326,13 +344,16 @@ draw_situation <- function(situation_table,geom_z1,geom_z2,list_z1_to_color = NU
   )
   m <- leaflet::addPolygons(
     m,
-    data = geom_z2,
+    data = geom_z2_inter,
     color = "red",
-    label = with(geom_z2, 
+    label = with(geom_z2_inter,
+      lapply( 
                  sprintf(
                    "<b> id z2 : </b> %s  <br/> <b> Number of observations : </b>  %s", 
                    z2, round(nb_obs_z2,1)
-                 ) %>% lapply(htmltools::HTML)
+                 ),
+                 htmltools::HTML
+             )
     ),
     weight = 2,
     fillOpacity = 0,
@@ -358,27 +379,27 @@ draw_situation <- function(situation_table,geom_z1,geom_z2,list_z1_to_color = NU
           htmltools::HTML)
       )
     )
-group_names <- c("z2 on two sides of one z1 area","intersections")  
 
-  if (!is.null(inside_geom_z2)){
     m <-
       leaflet::addPolygons(
         m,
-        data = inside_geom_z2,
+        data = geom_z2_inside,
         color = "#04117A",
         weight = 3,
         fillOpacity = 0.1,
         group = "inside z2",
-        label = htmltools::HTML(
+        label = lapply(
           sprintf(
-            "<b> id z2 : </b> %s",
-            inside_geom_z2$z2
-          )
-        )
+            "<b> id z2 : </b> %s <br/> <b> Number of observations : </b>  %s",
+             geom_z2_inside$z2, round(geom_z2_inside$nb_obs_z2,1)
+           ),
+           htmltools::HTML
+         )
       )
-    group_names <- c(group_names,"inside z2") 
-  }
   
+  
+  group_names <- c("z2 on two sides of one z1 area","intersections","inside z2")  
+
   m <- leaflet::addScaleBar(m,position="bottomright") 
   m <- leaflet::hideGroup(m,group_names) 
   m <- leaflet::addLayersControl(m,

@@ -15,7 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r warning=FALSE,message=FALSE,echo = FALSE}
-paquets <- c("data.table","btb","remotes","sf","igraph","Matrix","leaflet","dplyr","prettydoc","devtools","testthat")
+paquets <- c("data.table","btb","remotes","sf","igraph","Matrix","leaflet","dplyr","prettydoc","devtools","testthat","ggplot2")
 #install.packages(paquets)
 p <- lapply(paquets, function(p) suppressPackageStartupMessages(library(p, character.only = TRUE)))
 # remotes::install_github("https://github.com/InseeFrLab/diffman-1")
@@ -27,15 +27,14 @@ devtools::load_all()
 
 ### Ce code sera amené à disparaitre, en fire une vignette ! ou bien un rmd !!!
 #### Test sur données réelles 
+communes <-sf::st_read("ext_data/commune_franceentiere_2021.shp")
 data_rp <- data.table(readRDS("ext_data/data_rp.rds"))
 compo <- return_connected_components(data_rp)
 comp_to_nb_com <- compo[,.(nb_com = length(z1)),by ="id_comp"][rev(order(nb_com)),]
 comp_to_nb_com
 ```
 
-Here the R session explodes if  we put the whole data.frame in entry so we can work component by component thanks to the last function. the bigger contains more than 18000 municipalities !!
-Here we will tests with id_comp 1232 !
-
+Ici je chiisis une composante connexe particulière
 ```{r}
 list_z1_compo <- compo[id_comp == 329]$z1
 input_dt <- data_rp[z1 %in% list_z1_compo]
@@ -43,13 +42,13 @@ input_dt <- data_rp[z1 %in% list_z1_compo]
 l_area_z1_at_risk <- find_pbm_diff_tab(input_dt = input_dt,threshold = 11 )
 length(l_area_z1_at_risk)
 
-head(l_area_z1_at_risk,8)
+head(l_area_z1_at_risk,20)
 ```
 
 299 union of elements of z1 at risk of differenciation here. let's look further one this risk area
 ```{r}
 #lapply(l_area_z1_at_risk,length)
-area_z1_at_risk <- l_area_z1_at_risk[[14]]
+area_z1_at_risk <- l_area_z1_at_risk[[10]]
 area_z1_at_risk
 
 ```
@@ -93,40 +92,38 @@ carreaux_to_polygon <- function(data, var_carreau){
   
 }
 
-communes <-sf::st_read("ext_data/commune_franceentiere_2021.shp")
+# pour préparer les géométries
+preparer_geom <- function(input_dt){
+  
+  dt <- copy(input_dt)
+  liste_carreau <- unique(dt$z2)
+
+  polygone_carreau <-
+  carreaux_to_polygon(data.frame(carreau = liste_carreau), var_carreau = "carreau") %>%
+  sf::st_transform(crs = 4326)
+
+  geom_z1 <- communes %>%
+    filter(code %in% unique(c(dt$z1))) %>%
+    select(code) %>%
+    rename(z1 = code)
+
+  geom_z2 <- polygone_carreau %>%
+    rename(z2 = carreau) %>%
+    select(-x,-y)
+
+  out <- list(geom_z1 = geom_z1, geom_z2 = geom_z2)
+  
+  return(out)
+}
 
 ```  
 
 ```{r}
-l <- prepare_data(input_dt)
-init_table <- l$intersecting_z2
+situation_table <- input_dt[z1 %in% area_z1_at_risk]
+situation_table <- input_dt[z2 %in% situation_table$z2]
+situation_table <- clean_init_dt(situation_table)
 
-situation_table <- init_table[z1 %in% area_z1_at_risk]
-situation_table <- init_table[z2 %in% situation_table$z2]
-
-inside_area_z2 <- l$fully_included_z2[z1 %in% area_z1_at_risk,]$z2
-liste_carreau <- situation_table$z2
-
-polygone_carreau <-
-  carreaux_to_polygon(data.frame(carreau = liste_carreau), var_carreau = "carreau") %>%
-  sf::st_transform(crs = 4326)
-
-polygone_carreau_interne <-
-  carreaux_to_polygon(data.frame(carreau = inside_area_z2), var_carreau = "carreau") %>%
-  sf::st_transform(crs = 4326)
-
-geom_z1 <- communes %>%
-  filter(code %in% unique(c(situation_table$z1))) %>%
-  select(code) %>%
-  rename(z1 = code)
-
-geom_z2 <- polygone_carreau %>%
-  rename(z2 = carreau) %>%
-  select(-x,-y)
-
-inside_geom_z2 <- polygone_carreau_interne %>%
-  rename(z2 = carreau) %>%
-  select(-x,-y)
+l<- preparer_geom(situation_table)
 
 ```
 
@@ -134,15 +131,16 @@ And then we can draw the situation on an interactive map
 ```{r}
 draw_situation(
   situation_table,
-  geom_z1,
-  geom_z2,
+  l$geom_z1,
+  l$geom_z2,
   list_z1_to_color = area_z1_at_risk,
-  inside_geom_z2 = inside_geom_z2,
   threshold = 11
                )
 ```
 
 Looking at the square at the intersection of the blue municapility and the orange one (those of the area at risk ) we recognize the square disoplaty by the return_diff_info function !
+Bioen noter qu'un problème de différenciation externe sera également un problème de différenciation interne pour le complémentaire dans le graph !
+
 ```{r}
 diff_info
 ```
@@ -178,9 +176,11 @@ input_dt <- data_rp
 global_diff_info <- read_diff_info("diff_info")
 
 head(global_diff_info)
+
 ```
 
-# à comparer avec le nombre de communes dzns chaque compo
+### Etude des composantes connexes
+A comparer avec le nombre de communes dans chaque compo
 ```{r}
 comp_to_n_area <- global_diff_info[,.(n_at_risk_area= length(unique(checked_area))),by ="id_comp"][rev(order(n_at_risk_area))]
 comp_to_nb_com[,id_comp := as.character(id_comp)]
@@ -193,58 +193,75 @@ library(ggplot2)
 comp_info %>% 
   ggplot()+
   geom_point(aes(y= ratio_risk_nb_com, x = nb_com))
+
+```
+
+### Etude du max
+```{r}
+id_comp_max <- comp_info[which.max(comp_info$ratio_risk_nb_com)]$id_comp
+list_z1 <- compo[id_comp == id_comp_max]$z1
+input_dt <- data_rp[z1%in% list_z1]
+situation_table <- clean_init_dt(dt)
+
+l<- preparer_geom(situation_table)
+
+draw_situation(
+  situation_table,
+  geom_z1,
+  geom_z2,
+  threshold = 11
+               )
+
 ```
 On voit pas grand chose si ce n'est que la grosse composante n'a pas tant de zones à risque ce qui doit être proche de l'idée de morcellement de la zone elle doit tenir sur quelques points faibles (peu d'intersection fragiles. (a pousser )
 
 ### N checked area 
 ```{r}
-global_diff_info
-
+global_diff_info$checked_area %>% unique() %>% length()
 ```
+21272 areas à protéger dans 1902 composantes.
 
 ### N carreaux
-```{r}
 
+i) à risque
+```{r}
+carreau_a_risque <- global_diff_info$z2 %>% unique()
+length(carreau_a_risque)
 
 ```
+ii) comparaison avec nb carreaux sous le seuil
+```{r}
+carreau_to_nb_obs <- data_rp[ ,.(nb_obs = sum(nb_obs)),by = (z2)]
+carreau_au_dessus_du_seuil <- carreau_to_nb_obs[nb_obs >= 11]$z2
+
+
+100*sum(carreau_a_risque %in% carreau_au_dessus_du_seuil)/length(carreau_a_risque)
+
+```
+
+7932 carreaux "à risque", 50 % sont au dessus du seuil des 11 ménages
+
 
 ## Petit laius sur la stratégie de blanchiment pour le RP
 
 diffman va en fait extraire des intesrsections carreaux X commlunes à risque. Mais blanchir systématiquement les carreeaux impliqués dans ces intersections n'apportera pas grand chose car la différenciation interne est toujours possible même si le carreau (ou les) chevauchant est blanchi (à méditer). En fait ce qu'il faut c'est s'assurer que l'attaquant ne puisse pas faire de différenciation du tout sur la zone extraite. Comme on ne touchera jamais aux totaux communaux il s'agit en fait de s'assurer que l'attaquant nbe soit pas en mesure de reconstruire le total des carreaux totalement inclus dans la commune  (dans le cas d'une différzenciation interner ou le total des carreaux totalement inclus ou partiellement (zone de carreaux recouvrante). Pour ce faire on veut plutôt blanchir des carreaux intérieurs à la commune. et il faut aussi s'assurer que  l'agregation ne soit pas retrouvable. C'est comme si on forcait des agregations blanchies dans griddy.. PAs simple..
 
 
+Idée 1 :
+
+Gérer la différenciation du niveau le plus grossier au niveau le plus fin (ou inversement en comprenant bien le passage d'un niveau à un autre). Ce passage peut peut être s'interpréter en observant les liens entre composantes connexes niveau fin VS niveau grossier ?
+Observer les différentes composantes connexes dans ce cas. Je pense qu'on tend vers la fusion.
+Sinon gérer chaque niveau indépendemment. Puis récolter les masques et relier les niveaux à la manière de griddy. si un gros est blanchi il me faut au moins un autre blanchi plus bas?
+
+
+Gérer ls pbs de différenciation indépendemment, peut etre qu'il y en a moins sur les niveaux grossiers. Proposer une méthode de blanchiment pour le niveau fin. Faire une analyse composante par composante
+
 Fonction pour blanchir des carreaux au pif inf à 11 lmenages en esperant atteindre le seuil de 11
-```{r}
-
-
-```
 Amelioration pour blanchir des carreaux internes à la zone très influents
-```{r}
-
-
-```
 Amélioration de la représentationa vec les carreaux interne et les carreaux blanchis 
-```{r}
+Puis forme d'union des masques
+## Application de diffman sur les différents niveaux de la grislle superposée
 
-
-```
-
-
-
-## Tests diffman_tab on toy example (put that in test files) (what do we want to check ?)
-```{r}
-res1 <- find_pbm_diff_tab(toy_example_1,verbose = FALSE)
-return_diff_info(list_z1 = res1[[1]] ,input_dt = toy_example_1,threshold = 11)
-
-res2 <- find_pbm_diff_tab(toy_example_2,verbose = FALSE)
-return_diff_info(list_z1 = res2[[1]] ,input_dt = toy_example_2,threshold = 11)
-
-res3 <- find_pbm_diff_tab(toy_example_3,verbose = FALSE)
-return_diff_info(list_z1 = res3[[1]] ,input_dt = toy_example_3,threshold = 11)
-
-res4 <- find_pbm_diff_tab(toy_example_4,verbose = FALSE)
-return_diff_info(list_z1 = res4[[1]] ,input_dt = toy_example_4,threshold = 11)
-```
 
 ## TO DO :
 
