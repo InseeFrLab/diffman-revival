@@ -375,7 +375,7 @@ draw_situation <- function(situation_table,geom_z1,geom_z2,list_z1_to_color = NU
         lapply(
           sprintf(
             "<b> id z1 : </b> %s  <br/> <b> id z2 : </b>  %s <br/> <b> Number of observations : </b>  %s", 
-            z1, z2, round(nb_obs,1)
+            z1, z2, round(nb_obs,2)
           ),
           htmltools::HTML)
       )
@@ -393,7 +393,7 @@ draw_situation <- function(situation_table,geom_z1,geom_z2,list_z1_to_color = NU
         label = lapply(
           sprintf(
             "<b> id z2 : </b> %s <br/> <b> Number of observations : </b>  %s",
-             geom_z2_inside$z2, round(geom_z2_inside$nb_obs_z2,1)
+             geom_z2_inside$z2, round(geom_z2_inside$nb_obs_z2,2)
            ),
            htmltools::HTML
          )
