@@ -378,30 +378,31 @@ draw_situation <- function(situation_table,geom_z1,geom_z2,list_z1_to_color = NU
         lapply(
           sprintf(
             "<b> id z1 : </b> %s  <br/> <b> id z2 : </b>  %s <br/> <b> Number of observations : </b>  %s", 
-            z1, z2, round(nb_obs,2)
+            z1, z2, round(nb_obs,3)
           ),
           htmltools::HTML)
       )
     )
-
-    m <-
-      leaflet::addPolygons(
-        m,
-        data = geom_z2_inside,
-        color = "#04117A",
-        weight = 2,
-        fillOpacity = z2_fillColor,
-        opacity = z2_fillOpacity,
-        group = "inside z2",
-        label = lapply(
-          sprintf(
-            "<b> id z2 : </b> %s <br/> <b> Number of observations : </b>  %s",
-             geom_z2_inside$z2, round(geom_z2_inside$nb_obs_z2,2)
-           ),
-           htmltools::HTML
-         )
-      )
+    
   
+  
+  m <-
+    leaflet::addPolygons(
+      m,
+      data = geom_z2_inside,
+      color = "#04117A",
+      weight = 2,
+      fillOpacity = z2_fillOpacity,
+      fillColor = z2_fillColor,
+      group = "inside z2",
+      label = lapply(
+        sprintf(
+          "<b> id z2 : </b> %s <br/> <b> Number of observations : </b>  %s",
+          geom_z2_inside$z2, round(geom_z2_inside$nb_obs_z2,2)
+        ),
+        htmltools::HTML
+      )
+    )
   
   group_names <- c("z2 on two sides of one z1 area","intersections","inside z2")  
 
