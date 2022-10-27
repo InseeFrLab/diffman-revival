@@ -284,6 +284,7 @@ return_diff_info <- function(list_z1,input_dt, threshold = 11){
 #' @param geom_z1 the sf data.frame containing geometry of z1 elements referenced in the situation table 
 #' @param geom_z2 the sf data.frame containing geometry of z2 elements referenced in the situation table 
 #' @param list_z1_to_color list of z1 elements whichh polygon will be colored in the output interactive map
+#' @param list_z2_to_color list of z2 elements whichh polygon will be colored in the output interactive map
 #' @param threshold Strictly positive integer indicating the confidentiality
 #' threshold. z1 x z2 intersections which number of statistical units is under the threshold are colored in red
 #' @param save_name boolean, if not nul the map is saved in the diffman_results with the given name
@@ -292,7 +293,7 @@ return_diff_info <- function(list_z1,input_dt, threshold = 11){
 #' 
 #' @export
 
-draw_situation <- function(situation_table,geom_z1,geom_z2,list_z1_to_color = NULL, threshold = 11,save_name = NULL){
+draw_situation <- function(situation_table,geom_z1,geom_z2,list_z1_to_color = NULL,list_z2_to_color = NULL, threshold = 11,save_name = NULL){
   
   nb_obs <- z2 <- z1 <- NULL
   
@@ -321,6 +322,8 @@ draw_situation <- function(situation_table,geom_z1,geom_z2,list_z1_to_color = NU
   
   inter_z2_z1 <- merge(dt,inter_z2_z1,by = c("z1","z2"))
   z1_fillColor <- with(geom_z1,ifelse(z1 %in% list_z1_to_color,"orange","#3FC8FC"))
+  z2_fillColor <- with(geom_z2_inside,ifelse(z2 %in% list_z2_to_color,"#FFD5C7","#04117A"))
+  z2_fillOpacity <- with(geom_z2_inside,ifelse(z2 %in% list_z2_to_color,1,0))
   
   highlightOptions_defaut <- leaflet::highlightOptions(
     stroke = TRUE,
@@ -387,8 +390,8 @@ draw_situation <- function(situation_table,geom_z1,geom_z2,list_z1_to_color = NU
         data = geom_z2_inside,
         color = "#04117A",
         weight = 2,
-        fillOpacity = 0,
-        opacity = 1,
+        fillOpacity = z2_fillColor,
+        opacity = z2_fillOpacity,
         group = "inside z2",
         label = lapply(
           sprintf(
