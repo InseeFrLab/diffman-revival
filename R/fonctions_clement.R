@@ -300,6 +300,7 @@ draw_situation <- function(situation_table,geom_z1,geom_z2,list_z1_to_color = NU
   dt <- copy(situation_table)
   dt <- clean_init_dt(dt)
   z2_to_nb_obs <- dt[,.(nb_obs_z2=sum(nb_obs)),by = z2]
+  z1_to_nb_obs <- dt[,.(nb_obs_z1=sum(nb_obs)),by = z1]
   
   l <- isolate_intersection(dt)
   intersect_dt <-l$intersecting_z2
@@ -322,8 +323,12 @@ draw_situation <- function(situation_table,geom_z1,geom_z2,list_z1_to_color = NU
   
   inter_z2_z1 <- merge(dt,inter_z2_z1,by = c("z1","z2"))
   z1_fillColor <- with(geom_z1,ifelse(z1 %in% list_z1_to_color,"orange","#3FC8FC"))
-  z2_fillColor <- with(geom_z2,ifelse(z2 %in% list_z2_to_color,"#FFD5C7","#04117A"))
+  z2_fillColor <- with(geom_z2,ifelse(z2 %in% list_z2_to_color,
+                                      ifelse(nb_obs >= threshold, "#FFD5C7","#1FF064"),
+                                      "#04117A"))
   z2_fillOpacity <- with(geom_z2,ifelse(z2 %in% list_z2_to_color,1,0))
+  
+  geom_z1 <- merge(geom_z1,z1_to_nb_obs,by ="z1",nomatch = 0)
   
   highlightOptions_defaut <- leaflet::highlightOptions(
     stroke = TRUE,
@@ -344,20 +349,28 @@ draw_situation <- function(situation_table,geom_z1,geom_z2,list_z1_to_color = NU
     weight = 2,
     fillOpacity = 0.25,
     opacity = 1,
-    label = geom_z1$z1
+    label = with(geom_z1,
+                 lapply( 
+                   sprintf(
+                     "<b> id z1 : </b> %s  <br/> <b> Number of observations : </b>  %s", 
+                     z1, round(nb_obs_z1,1)
+                   ),
+                   htmltools::HTML
+                 )
+    )
   )
   m <- leaflet::addPolygons(
     m,
     data = geom_z2_inter,
     color = "red",
     label = with(geom_z2_inter,
-      lapply( 
-                 sprintf(
-                   "<b> id z2 : </b> %s  <br/> <b> Number of observations : </b>  %s", 
-                   z2, round(nb_obs_z2,1)
-                 ),
-                 htmltools::HTML
-             )
+                 lapply( 
+                   sprintf(
+                     "<b> id z2 : </b> %s  <br/> <b> Number of observations : </b>  %s", 
+                     z2, round(nb_obs_z2,1)
+                   ),
+                   htmltools::HTML
+                 )
     ),
     weight = 2,
     fillOpacity = 0,
@@ -383,7 +396,7 @@ draw_situation <- function(situation_table,geom_z1,geom_z2,list_z1_to_color = NU
           htmltools::HTML)
       )
     )
-    
+  
   
   
   m <-
@@ -405,7 +418,7 @@ draw_situation <- function(situation_table,geom_z1,geom_z2,list_z1_to_color = NU
     )
   
   group_names <- c("z2 on two sides of one z1 area","intersections","inside z2")  
-
+  
   m <- leaflet::addScaleBar(m,position="bottomright") 
   m <- leaflet::hideGroup(m,group_names) 
   m <- leaflet::addLayersControl(m,
