@@ -504,7 +504,7 @@ one_component_risk_extraction <- function(input_dt,
   # list_z1_compo <- compo[id_comp == 1232]$z1
   # input_dt <- data_rp[z1 %in% list_z1_compo]
   verbose  = FALSE
-  if(length(unique(input_dt$z1 > 1000))) verbose = TRUE
+  if(length(unique(input_dt$z1)) > 1000) verbose = TRUE
   
   list_area_z1_at_risk <- find_pbm_diff_tab(input_dt,
                                             verbose = verbose,
