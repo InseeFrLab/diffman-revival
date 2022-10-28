@@ -324,7 +324,7 @@ draw_situation <- function(situation_table,geom_z1,geom_z2,list_z1_to_color = NU
   inter_z2_z1 <- merge(dt,inter_z2_z1,by = c("z1","z2"))
   z1_fillColor <- with(geom_z1,ifelse(z1 %in% list_z1_to_color,"orange","#3FC8FC"))
   z2_fillColor <- with(geom_z2,ifelse(z2 %in% list_z2_to_color,
-                                      ifelse(nb_obs >= threshold, "#FFD5C7","#1FF064"),
+                                      ifelse(nb_obs_z2 >= threshold, "#FFD5C7","#1FF064"),
                                       "#04117A"))
   z2_fillOpacity <- with(geom_z2,ifelse(z2 %in% list_z2_to_color,1,0))
   
