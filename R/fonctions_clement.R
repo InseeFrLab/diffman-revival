@@ -306,10 +306,10 @@ draw_situation <- function(situation_table,geom_z1,geom_z2,list_z1_to_color = NU
   inside_dt <- l$fully_included_z2
   
   geom_z2_inter <- geom_z2[geom_z2$z2 %in% intersect_dt$z2,]
-  geom_z2_inside <-  geom_z2[geom_z2$z2 %in% inside_dt$z2,]
+  #geom_z2_inside <-  geom_z2[geom_z2$z2 %in% inside_dt$z2,]
   
   geom_z2_inter <- merge(geom_z2_inter,z2_to_nb_obs,by ="z2",nomatch = 0)
-  geom_z2_inside <- merge(geom_z2_inside,z2_to_nb_obs,by ="z2",nomatch = 0)
+  geom_z2 <- merge(geom_z2,z2_to_nb_obs,by ="z2",nomatch = 0)
   
   # build the z1 x z2 intersection geometry
   sf::st_agr(geom_z1) = "constant"
@@ -322,8 +322,8 @@ draw_situation <- function(situation_table,geom_z1,geom_z2,list_z1_to_color = NU
   
   inter_z2_z1 <- merge(dt,inter_z2_z1,by = c("z1","z2"))
   z1_fillColor <- with(geom_z1,ifelse(z1 %in% list_z1_to_color,"orange","#3FC8FC"))
-  z2_fillColor <- with(geom_z2_inside,ifelse(z2 %in% list_z2_to_color,"#FFD5C7","#04117A"))
-  z2_fillOpacity <- with(geom_z2_inside,ifelse(z2 %in% list_z2_to_color,1,0))
+  z2_fillColor <- with(geom_z2,ifelse(z2 %in% list_z2_to_color,"#FFD5C7","#04117A"))
+  z2_fillOpacity <- with(geom_z2,ifelse(z2 %in% list_z2_to_color,1,0))
   
   highlightOptions_defaut <- leaflet::highlightOptions(
     stroke = TRUE,
@@ -389,7 +389,7 @@ draw_situation <- function(situation_table,geom_z1,geom_z2,list_z1_to_color = NU
   m <-
     leaflet::addPolygons(
       m,
-      data = geom_z2_inside,
+      data = geom_z2,
       color = "#04117A",
       weight = 2,
       fillOpacity = z2_fillOpacity,
@@ -398,7 +398,7 @@ draw_situation <- function(situation_table,geom_z1,geom_z2,list_z1_to_color = NU
       label = lapply(
         sprintf(
           "<b> id z2 : </b> %s <br/> <b> Number of observations : </b>  %s",
-          geom_z2_inside$z2, round(geom_z2_inside$nb_obs_z2,2)
+          geom_z2_inside$z2, round(geom_z2$nb_obs_z2,2)
         ),
         htmltools::HTML
       )
