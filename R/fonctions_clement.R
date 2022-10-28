@@ -577,7 +577,7 @@ all_component_risk_extraction <- function(input_dt,threshold = 11, max_agregate_
       max_agregate_size = max_agregate_size
     )
     
-    tot_diff_info$id_comp <- id_compo
+    if(nrow(tot_diff_info) !=0) tot_diff_info$id_comp <- id_compo
     
     e <- Sys.time()
     message(round(e-s)," seconds")
