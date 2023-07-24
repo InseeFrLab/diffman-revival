@@ -2,7 +2,8 @@
 % Please edit documentation in R/fonctions_clement.R
 \name{return_connected_components}
 \alias{return_connected_components}
-\title{Return elements of z1 with associated cobnnected components id from a given z1 x z2 crossing data.table}
+\title{Return elements of z1 with associated connected components id
+from a given z1 x z2 crossing data.table}
 \usage{
 return_connected_components(input_dt)
 }
@@ -10,10 +11,12 @@ return_connected_components(input_dt)
 \item{input_dt}{(data.table) containing the z1xz2 crossing data with nb_obs}
 }
 \value{
-a data table where associating each z1 to the id of its connected component
+a data table where associating each z1 to the id of its connected
+component
 }
 \description{
-Return elements of z1 with associated cobnnected components id from a given z1 x z2 crossing data.table
+Return elements of z1 with associated connected components id
+from a given z1 x z2 crossing data.table
 }
 \examples{
 input_dt <- toy_example_6

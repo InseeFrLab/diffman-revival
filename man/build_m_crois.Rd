@@ -7,15 +7,20 @@
 build_m_crois(input_dt)
 }
 \arguments{
-\item{input_dt}{(data.table) containing the z1 x z2 crossing with out duplicated lines}
+\item{input_dt}{(data.table) containing the z1 x z2 crossing without
+duplicated lines}
 }
 \value{
-returns the crossover matrix (SparseMatrix), whose rows represent the elements of z1 and the columns the elements of z2 (possibly aggregated if they contribute to the same connection) and whose values are equal to the number of statistical units in the considered z1 x z2 crossover
+returns the crossover matrix (SparseMatrix), whose rows represent
+the elements of z1 and the columns the elements of z2
+(possibly aggregated if they contribute to the same connection)
+and whose values are equal to the number of statistical units in the
+considered z1 x z2 crossover
 }
 \description{
 Build the cross matrix
 }
 \examples{
 input_dt <- toy_example_6
-m_crois<- diffman:::build_m_crois(input_dt)
+m_crois <- build_m_crois(input_dt)
 }

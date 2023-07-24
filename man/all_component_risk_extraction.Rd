@@ -2,8 +2,9 @@
 % Please edit documentation in R/fonctions_clement.R
 \name{all_component_risk_extraction}
 \alias{all_component_risk_extraction}
-\title{return the diff info from a input data table corresponding the whole graph which is a list of connected component of z1
-perform the search of diff issue and return the diff information for all the corresponding component}
+\title{return the diff info from a input data table corresponding the whole graph 
+which is a list of connected component of z1 perform the search of diff issue
+and return the diff information for all the corresponding component.}
 \usage{
 all_component_risk_extraction(
   input_dt,
@@ -14,26 +15,31 @@ all_component_risk_extraction(
 }
 \arguments{
 \item{input_dt}{The tabulation table (data.frame or data.table). Each row
-corresponds to the number of statistical units in a cross defined by a modality of the z1 nomenclature and a modality of the z2 nomenclature
-z1 has to belong to the same related component (regarding the graph construction)}
+corresponds to the number of statistical units in a cross defined by a 
+modality of the z1 nomenclature and a modality of the z2 nomenclature
+z1 has to belong to the same related component
+(regarding the graph construction)}
 
 \item{threshold}{Strictly positive integer indicating the confidentiality
 threshold. Observations are considered at risk if one can deduce information
-on a agregate of n observations where n < threshold.}
+on an aggregate of n observations where n < threshold.}
 
 \item{max_agregate_size}{Integer indicating the maximal size of agregates
-which are tested exhaustively. If that number is too large (greater than 30), the
-computations may not end because of the combinations number that can become very large.
-Also the RAM can be overloaded.}
+which are tested exhaustively. If that number is too large (greater than 30),
+the computations may not end because of the combinations number
+that can become very large. Also the RAM can be overloaded.}
 
-\item{save_dir}{Character indicating the folder where ntermediate results willbe saved (useful if there is too much components)}
+\item{save_dir}{Character indicating the folder where intermediate results 
+will be saved (useful if there is too many components)}
 }
 \value{
-a data.table containning the diff info for this componet (same format than the return diff info function)
+a data.table containing the diff info for this component 
+(same format than the return diff info function)
 }
 \description{
-return the diff info from a input data table corresponding the whole graph which is a list of connected component of z1
-perform the search of diff issue and return the diff information for all the corresponding component
+return the diff info from a input data table corresponding the whole graph 
+which is a list of connected component of z1 perform the search of diff issue
+and return the diff information for all the corresponding component.
 }
 \examples{
 input_dt <- toy_example_6

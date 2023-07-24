@@ -7,10 +7,11 @@
 read_diff_info(save_dir)
 }
 \arguments{
-\item{save_dir}{the directory where the diff_info files (from all_component_risk_extraction) are included}
+\item{save_dir}{the directory where the diff_info files 
+(from all_component_risk_extraction) are included}
 }
 \value{
-a data.table containning all the diff info for all related components
+a data.table containing all the diff info for all related components
 }
 \description{
 Read diff_info info from files into a given directory and rbind them

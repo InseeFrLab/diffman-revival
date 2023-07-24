@@ -7,10 +7,12 @@
 isolate_intersection(input_dt)
 }
 \arguments{
-\item{input_dt}{(data.table) containing the z2 x z2 crossing with counts, tabulation table}
+\item{input_dt}{(data.table) containing the z1 x z2 crossing with counts,
+tabulation table}
 }
 \value{
-a list with the intersection on the first element and the llines corresponding to the fully included square in the second element
+a list with the intersection on the first element and the lines
+corresponding to the fully included square in the second element
 }
 \description{
 Isolate intersection z2xz1 from z2 lines where z2 is fully included in z1

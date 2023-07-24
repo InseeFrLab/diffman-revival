@@ -3,7 +3,9 @@
 \name{find_pbm_diff_tab}
 \alias{find_pbm_diff_tab}
 \title{Find at-risk-of-differenciation areas.
-Build the crossover matrix defined in build_m_crois, and operates the graph reduction functions on it and then returns the z1-zones (union of elements of z1) at risk}
+Build the crossover matrix defined in \code{build_m_crois}, and operates
+the graph reduction functions on it and then returns the z1-zones
+(union of elements of z1) at risk}
 \usage{
 find_pbm_diff_tab(
   input_dt,
@@ -15,33 +17,40 @@ find_pbm_diff_tab(
 )
 }
 \arguments{
-\item{input_dt}{(data.table) containing the z2 x z2 crossing with counts, tabulation table}
+\item{input_dt}{(data.table) containing the z1 x z2 crossing with counts,
+tabulation table}
 
 \item{max_agregate_size}{Integer indicating the maximal size of agregates
-which are tested exhaustively. If that number is too large (greater than 30), the
-computations may not end because of the combinations number that can become very large.
-Also the RAM can be overloaded.}
+which are tested exhaustively. If that number is too large (greater than 30),
+the computations may not end because of the combinations number
+that can become very large. Also the RAM can be overloaded.}
 
-\item{save_intermediate_data_file}{Character indicating the suffix of the name of the saved intermediate results.
-If is null, results are not writing on the hardware. The path root is taken from the working directory (getwd()).
-if not null a rds file is saved containing the initial crossing matrix, the simplificated matrix after merging and the list of matrix after the splitting operation}
+\item{save_intermediate_data_file}{Character indicating the suffix of the
+name of the saved intermediate results. If \code{NULL}, results are not
+written on the hardware. The path root is taken from the working directory 
+(getwd()). Else a `.rds` file is saved containing the initial crossing 
+matrix, the simplified matrix after merging and the list of matrix after the
+splitting operation.}
 
-\item{simplify}{Boolean. If TRUE then the graph simplification (merging + splitting)
-occures. Otherwise the exhaustive search is directly applied on the original graph.}
+\item{simplify}{Boolean. If \code{TRUE} then the graph simplification
+(merging + splitting) occurs. Otherwise the exhaustive search is directly
+applied on the original graph.}
 
-\item{verbose}{Boolean. If TRUE (default), the different steps of the process are 
-notified and progress bars provide an estimation of time left.}
+\item{verbose}{Boolean. If \code{TRUE} (default), the different steps of the
+process are notified and progress bars provide an estimation of time left.}
 
 \item{threshold}{Strictly positive integer indicating the confidentiality
 threshold. Observations are considered at risk if one can deduce information
-on a agregate of n observations where n < threshold.}
+on an aggregate of n observations where n < threshold.}
 }
 \value{
 the list of  at-risk zones defined by unions of z1 elements
 }
 \description{
 Find at-risk-of-differenciation areas.
-Build the crossover matrix defined in build_m_crois, and operates the graph reduction functions on it and then returns the z1-zones (union of elements of z1) at risk
+Build the crossover matrix defined in \code{build_m_crois}, and operates
+the graph reduction functions on it and then returns the z1-zones
+(union of elements of z1) at risk
 }
 \examples{
 input_dt <- toy_example_6

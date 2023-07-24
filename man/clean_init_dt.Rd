@@ -2,19 +2,22 @@
 % Please edit documentation in R/fonctions_clement.R
 \name{clean_init_dt}
 \alias{clean_init_dt}
-\title{Cleans the initial dataset by removing rows that are not in the correct format and removes duplicated lines}
+\title{Cleans the initial dataset by removing rows that are not in the correct format
+ and aggregates duplicated lines}
 \usage{
 clean_init_dt(input_dt)
 }
 \arguments{
 \item{input_dt}{The tabulation table (data.table). Each row
-corresponds to the number of statistical unitsin a cross defined by a modality of the z1 nomenclature and a modality of the z2 nomenclature}
+corresponds to the number of statistical units in a cross defined by a
+modality of the z1 nomenclature and a modality of the z2 nomenclature}
 }
 \value{
 the cleaned tabulation table
 }
 \description{
-Cleans the initial dataset by removing rows that are not in the correct format and removes duplicated lines
+Cleans the initial dataset by removing rows that are not in the correct format
+ and aggregates duplicated lines
 }
 \examples{
 input_dt<- toy_example_6

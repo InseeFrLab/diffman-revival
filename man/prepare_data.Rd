@@ -2,16 +2,24 @@
 % Please edit documentation in R/fonctions_clement.R
 \name{prepare_data}
 \alias{prepare_data}
-\title{Prepare data , cleaning input_df with z1xzé crossin and extract lines containing z2 whichh are not fully contained by one element of z1}
+\title{Prepare data , cleaning input data with z1xz2 crossing and extract lines
+containing z2 which are not fully contained by one element of z1}
 \usage{
 prepare_data(input_dt)
 }
 \arguments{
-\item{input_dt}{(data.table) containing the z2 x z2 crossing with counts, tabulation table}
+\item{input_dt}{(data.table) containing the z1 x z2 crossing with counts,
+tabulation table}
 }
 \value{
-a list with the intersection on the first element and the llines corresponding to the fully included square in the second element
+a list with the intersection on the first element and the lines
+corresponding to the fully included square in the second element
 }
 \description{
-Prepare data , cleaning input_df with z1xzé crossin and extract lines containing z2 whichh are not fully contained by one element of z1
+Prepare data , cleaning input data with z1xz2 crossing and extract lines
+containing z2 which are not fully contained by one element of z1
+}
+\examples{
+input_dt <- toy_example_6
+prepared_data <- prepare_data(input_dt)
 }

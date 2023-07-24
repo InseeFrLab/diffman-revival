@@ -2,34 +2,48 @@
 % Please edit documentation in R/fonctions_clement.R
 \name{draw_situation}
 \alias{draw_situation}
-\title{output a leaflet interactive map from a \emph{situation}, corresponding to tthe set of information needed ton interpretn differencing issue s in a zone built frolmz1 elements}
+\title{output a leaflet interactive map from a \emph{situation}, corresponding to 
+the set of information needed ton interpretn differencing issue s in a zone
+built from z1 elements}
 \usage{
 draw_situation(
   situation_table,
   geom_z1,
   geom_z2,
   list_z1_to_color = NULL,
+  list_z2_to_color = NULL,
   threshold = 11,
   save_name = NULL
 )
 }
 \arguments{
-\item{situation_table}{a subset of crossing z1 x z2 with nb_obs at the intersection}
+\item{situation_table}{a subset of crossing z1 x z2 with nb_obs 
+at the intersection}
 
-\item{geom_z1}{the sf data.frame containing geometry of z1 elements referenced in the situation table}
+\item{geom_z1}{the sf data.frame containing geometry of z1 elements
+referenced in the situation table}
 
-\item{geom_z2}{the sf data.frame containing geometry of z2 elements referenced in the situation table}
+\item{geom_z2}{the sf data.frame containing geometry of z2 elements 
+referenced in the situation table}
 
-\item{list_z1_to_color}{list of z1 elements whichh polygon will be colored in the output interactive map}
+\item{list_z1_to_color}{list of z1 elements whichh polygon will be colored 
+in the output interactive map}
+
+\item{list_z2_to_color}{list of z2 elements whichh polygon will be colored 
+in the output interactive map}
 
 \item{threshold}{Strictly positive integer indicating the confidentiality
-threshold. z1 x z2 intersections which number of statistical units is under the threshold are colored in red}
+threshold. z1 x z2 intersections which number of statistical units is under 
+the threshold are colored in red}
 
-\item{save_name}{boolean, if not nul the map is saved in the diffman_results with the given name}
+\item{save_name}{boolean, if not nul the map is saved in the diffman_results
+with the given name}
 }
 \value{
-A list with the following elements
+A leaflet object
 }
 \description{
-output a leaflet interactive map from a \emph{situation}, corresponding to tthe set of information needed ton interpretn differencing issue s in a zone built frolmz1 elements
+output a leaflet interactive map from a \emph{situation}, corresponding to 
+the set of information needed ton interpretn differencing issue s in a zone
+built from z1 elements
 }
